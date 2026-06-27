@@ -33,3 +33,7 @@ Look at what is done, analyze what could be done better, generate a plan on what
 ---
 
 please prepare a .tex file (which i can compile into pdf) with the whole architecture explained from scratch
+
+---
+
+create a commit with cleanup & docs & code related to out research
