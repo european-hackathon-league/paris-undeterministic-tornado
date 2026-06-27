@@ -1,55 +1,80 @@
-Start an https://github.com/AIM-KannLab/BrainIAC on server ip:
-134.199.198.104 root_password:
-Drake2550
+Сделай локально нужные env, или пришли мне как его сделать
 
 ---
 
-Look at readme for instructions on running model, weights and etc
+Как там с дообучением? Работает?
 
 ---
 
-Go ahead
+Запусти сабагента что бы локально изучал текущее, а дообучение запусти сам
 
 ---
 
-Yes
+Локально изучи текущее состояние retrieval/BrainIAC пайплайна в репозитории /Users/mikhail.fadin/paris. Нужен короткий аудит: 1) какие BrainIAC-артефакты уже есть, 2) что именно сейчас можно локально обучить/оценить без сервера, 3) почему текущий BrainIAC likely хуже baseline на dataset1, 4) есть ли локально checkpoint/torch/monai/готовые train embeddings. Ничего не меняй. Верни конкретные пути файлов и ключевые выводы.
 
 ---
 
-U can install conda
+Create venv in this directory
 
 ---
 
-1
-
----
-
-Я хочу сделать тестовый субмит для нашего kaggle сореванования) посмотри локально на baseline и readme, генери вектора и сравнивай их на основе cosine simularity в результате должны получиться нагенерерированные вектора+готовый submmition+код в нашем репо должен быть
-
----
-
-На сервере все лежит в ~/ehl-paris-medical-image-retrieval
-
----
-
-Это вектора созданные на BrainIAC?
-
----
-
-Да, сделай так
-
----
-
-BrainIAC на сервере же, и так и должен раниться
-
----
-
-Погоди, данные же уже на сервере, датасет там лежит
-
----
-
-Нет, используй GPU
+Ты должен заниматься дообучением модели на сервере еблан
 
 ---
 
 Try again
+
+---
+
+Нужно подключаться от root
+
+---
+
+root@tumai-paris-hackathon-9:~#   docker exec -it rocm bash -lc '
+  cd /app &&
+  python3 /root/paris/brainiac_adapter_train.py \
+    --data-root /app/ehl-paris-medical-image-retrieval \
+    --checkpoint /app/BrainIAC.ckpt \
+    --run-dir /app/runs/brainiac_adapter \
+    --device cuda \
+    --embed-batch-size 8 \
+    --batch-size 64 \
+    --epochs 120
+  '
+python3: can't open file '/root/paris/brainiac_adapter_train.py': [Errno 2] No such file or directory
+root@tumai-paris-hackathon-9:~#
+
+---
+
+root@tumai-paris-hackathon-9:~#   docker cp /root/paris/brainiac_adapter_train.py rocm:/app/brainiac_adapter_train.py
+lstat /root/paris/brainiac_adapter_train.py: no such file or directory
+root@tumai-paris-hackathon-9:~#
+
+---
+
+epoch 118 loss=2.84526 holdout_mrr=0.1825 all_gallery_mrr=0.0789
+epoch 119 loss=2.84655 holdout_mrr=0.1881 all_gallery_mrr=0.0559
+epoch 120 loss=2.78898 holdout_mrr=0.1657 all_gallery_mrr=0.0500
+Traceback (most recent call last):
+  File "/app/brainiac_adapter_train.py", line 604, in <module>
+    main()
+  File "/app/brainiac_adapter_train.py", line 550, in main
+    write_json(
+  File "/app/brainiac_adapter_train.py", line 63, in write_json
+    json.dump(payload, f, indent=2, sort_keys=True)
+  File "/usr/lib/python3.12/json/__init__.py", line 179, in dump
+    for chunk in iterable:
+                 ^^^^^^^^
+  File "/usr/lib/python3.12/json/encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "/usr/lib/python3.12/json/encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type PosixPath is not JSON serializable
+root@tumai-paris-hackathon-9:~#

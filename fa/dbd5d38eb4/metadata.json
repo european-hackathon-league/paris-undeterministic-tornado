@@ -3,28 +3,12 @@
   "checkpoint_id": "fadbd5d38eb4",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 13,
+  "checkpoints_count": 12,
   "files_touched": [
     ".gitignore",
     "README.md",
-    "artifacts/vectors/brainiac_cosine/dataset1_test_vectors.npz",
-    "artifacts/vectors/brainiac_cosine/dataset1_val_vectors.npz",
-    "artifacts/vectors/brainiac_cosine/dataset2_test_vectors.npz",
-    "artifacts/vectors/brainiac_cosine/dataset2_val_vectors.npz",
-    "artifacts/vectors/brainiac_cosine/dataset3_test_vectors.npz",
-    "artifacts/vectors/brainiac_cosine/dataset3_val_vectors.npz",
-    "artifacts/vectors/fusion_default_plus_pca/dataset1_test_vectors.npz",
-    "artifacts/vectors/fusion_default_plus_pca/dataset1_val_vectors.npz",
-    "artifacts/vectors/fusion_default_plus_pca/dataset2_test_vectors.npz",
-    "artifacts/vectors/fusion_default_plus_pca/dataset2_val_vectors.npz",
-    "artifacts/vectors/fusion_default_plus_pca/dataset3_test_vectors.npz",
-    "artifacts/vectors/fusion_default_plus_pca/dataset3_val_vectors.npz",
     "brainiac_adapter_train.py",
-    "brainiac_cosine_retrieval.py",
-    "classical_retrieval.py",
-    "server_run_brainiac_gpu.sh",
-    "submissions/brainiac_cosine_submission.csv",
-    "submissions/cosine_vectors_fusion_default_plus_pca.csv"
+    "setup_local_env_offline.sh"
   ],
   "sessions": [
     {
@@ -41,11 +25,11 @@
     }
   ],
   "token_usage": {
-    "input_tokens": 293512,
+    "input_tokens": 994803,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 2513664,
-    "output_tokens": 13533,
-    "api_call_count": 30
+    "cache_read_tokens": 32216192,
+    "output_tokens": 74774,
+    "api_call_count": 244
   },
   "combined_attribution": {
     "calculated_at": "2026-06-27T16:08:25.854577Z",
