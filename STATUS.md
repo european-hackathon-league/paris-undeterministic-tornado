@@ -56,6 +56,90 @@ embeddings even with geom+contrast augmentation. Killed to free GPU. The
 augmented data could still be used to refit the classical PCA/Ridge map for
 robustness, but the classical pipeline already dominates.
 
+## Submit log (0.95 push)
+
+- 2026-06-27 19:42 — `d2_template_augfit_g44_hungarian.csv` → **0.20931** (d2 MRR ~0.628; REGRESSED vs 0.749).
+- 2026-06-27 19:42 — `mix_hung_d1template_d2augfit_d3grid.csv` → **0.86412** (REGRESSED vs 0.90444).
+
+### Summary @ augfit regression
+Synthetic-augmented map refit hurt real d2 (0.749→0.628). The harness predicted
++0.11 but it did NOT transfer — the map overfit the synthetic deform/contrast
+distribution. SECOND confirmed case (after grid56) that the harness is unreliable
+for changes that depend on the data DISTRIBUTION (map retraining, resolution),
+while it IS reliable for geometry/architecture method ranking (template vs
+canonical vs affine — all transferred correctly). BEST stays 0.90444.
+
+Revised plan for 0.95: stop retraining the map on synthetic data. Attack the d2
+error TAIL = registration failures (rigid stuck in local minima -> wrong frame).
+Registration robustness (PCA-axis init, more multi-starts, coarse-to-fine) is a
+geometry/optimization fix, the category the harness predicts reliably. Also worth:
+real server geom+contrast aug via --fit-pair-csv (real distribution, may transfer
+unlike synthetic).
+
+## Alpha ternary search — NEGATIVE (alpha is inert)
+
+- 2026-06-27 19:59 — `mix_a190.csv` → 0.90444; `mix_a380.csv` → 0.90444 (= anchor a100).
+- Diffed submissions across alpha in [0, 2000]: only ranking TAILS change; top-1 is
+  NEVER changed in any pool; val (public) rows essentially unchanged until a=2000.
+- CONCLUSION: Ridge alpha does not affect MRR here. Hungarian forces the assigned
+  target to rank 1, so MRR depends only on the permutation, which is stable to alpha.
+  Ternary/grid search over alpha is futile. Lever = d2 assignment accuracy itself.
+
+## More 0.95 attempts (all REGRESSED — best stays 0.90444)
+
+- affine reg (harness 0.39<0.56), deformable (washes subject shape), robust/PCA-init
+  reg (harness 0.53, neutral at 12deg), synth-augfit (real d2 0.749->0.628),
+  rich multi-channel feature (harness +0.05 BUT real mix 0.88978 < 0.90444).
+- HARDENED LESSON: the synthetic harness only predicts LARGE architectural wins
+  (template vs canonical, ~2x — transferred). Small harness gains (+0.05) are
+  synthetic-distribution overfit and do NOT transfer to real d2. Stop trusting
+  incremental harness deltas; only submit qualitatively different methods.
+- Remaining classical hope: server real geom+contrast augmented map refit (running,
+  fit-feature ~500/850). If it fails, 0.95 likely needs a pretrained 3D medical
+  encoder fine-tuned on the 850 aug pairs (large effort, GPU), since the classical
+  template+pca_ridge d2 appears near its ~0.75 ceiling.
+
+## Real-aug refit — REGRESSED (best stays 0.90444)
+
+- 2026-06-27 20:44 — `d2_template_realaug_g44_hungarian.csv` → 0.18672 (d2 MRR ~0.56).
+- 2026-06-27 20:44 — `mix_hung_d1template_d2realaug_d3grid.csv` → 0.84153.
+- Both SYNTHETIC and REAL geom+contrast augmentation refit HURT d2 (0.749 -> 0.628 /
+  0.56). Augmenting the cross-modal map degrades it — the aug distribution does not
+  match real d2's transforms. Augmentation is a dead end for the classical map.
+
+## Status of the 0.95 push (honest)
+
+Classical levers exhausted; d2 sits at its ~0.749 ceiling for template+pca_ridge.
+Tried and FAILED/neutral: alpha (inert), grid56, affine, deformable, robust/PCA-init
+reg, rich features, synth-augfit, real-augfit. Best verified = 0.90444. Reaching
+0.95 needs d2 ~0.886 (+0.14 on the hardest dataset) and likely a higher-ceiling
+model (pretrained 3D medical encoder fine-tuned on the 850 aug pairs) — scratch
+contrastive already failed (0.04), so this is uncertain and large effort.
+
+## Push toward 0.95 (goal)
+
+Need MRR sum 2.85 (currently 2.713). d3~1.0 maxed, d1~0.964 near ceiling, so d2
+(~0.749) must reach ~0.886. Harness findings:
+- affine registration: 0.387 < rigid 0.558 — HURTS (extra DOF warp away subject
+  shape; rigid is the sweet spot, deformable would be worse).
+- **augmented map refit (geom+contrast): 0.669 vs 0.558 (+0.11)** — refitting
+  PCA/Ridge on augmented pairs helps. Generating real-d2 version now
+  (`--synth-aug-k 2`). Also have `--fit-pair-csv` for the server's real 850 aug pairs.
+- Next if needed: registration robustness (more multi-starts / PCA-axis init) for
+  the mis-assigned tail; more aug copies; real server augmentation.
+
+## BrainIAC fine-tune (deep, in progress)
+
+The augmentation's correct consumer. `brainiac_finetune.py` fine-tunes the
+pretrained BrainIAC ViT (MONAI, 96^3, /app/BrainIAC.ckpt) + a projection head with
+symmetric InfoNCE to align T1/T2, trained on the stronger augmented manifest
+(`train_pairs_aug_geom_contrast_1k_plus_stronger.csv`, 2100 pairs = 350 clean +
+1750 aug, 5 variants/subject). 1788 train / 312 holdout (subject-aware). Running
+on the ROCm GPU; monitoring holdout all-gallery MRR vs the scratch failure (0.04)
+and frozen-cosine (0.15). On completion it auto-embeds all pools + Hungarian +
+writes /app/submissions/brainiac_finetune_submission.csv. Then pull, mix, submit.
+This is the remaining higher-ceiling shot at 0.95; uncertain.
+
 ## In flight
 
 - **Track A2**: template normalization on dataset1 + dataset3
