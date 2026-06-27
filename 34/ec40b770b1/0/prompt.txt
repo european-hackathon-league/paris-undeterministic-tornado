@@ -1,0 +1,21 @@
+Там видимо что-то очень большой в комите, проверь, перепиши зааменди этот коммит что бы там не было больших файлов и запушь
+
+---
+
+Submit yourself using kaggle competitions submit -c ehl-paris-medical-image-retrieval -f submission.csv  -m "Message"
+
+---
+
+Submit yourself using kaggle competitions submit -c ehl-paris-medical-image-retrieval -f submission.csv  -m "Message"
+
+---
+
+What is the current status with this pipeline, can we make it better?
+
+---
+
+Сколько субмитов ты хочешь сейчас сделать?
+
+---
+
+Generate me a summary with all relevant information about the repo and dataset structure, and the goal and work principles for new ML developer/agent. Save it to ONBOARD.md
