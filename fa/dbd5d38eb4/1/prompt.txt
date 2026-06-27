@@ -1,0 +1,55 @@
+Start an https://github.com/AIM-KannLab/BrainIAC on server ip:
+134.199.198.104 root_password:
+Drake2550
+
+---
+
+Look at readme for instructions on running model, weights and etc
+
+---
+
+Go ahead
+
+---
+
+Yes
+
+---
+
+U can install conda
+
+---
+
+1
+
+---
+
+Я хочу сделать тестовый субмит для нашего kaggle сореванования) посмотри локально на baseline и readme, генери вектора и сравнивай их на основе cosine simularity в результате должны получиться нагенерерированные вектора+готовый submmition+код в нашем репо должен быть
+
+---
+
+На сервере все лежит в ~/ehl-paris-medical-image-retrieval
+
+---
+
+Это вектора созданные на BrainIAC?
+
+---
+
+Да, сделай так
+
+---
+
+BrainIAC на сервере же, и так и должен раниться
+
+---
+
+Погоди, данные же уже на сервере, датасет там лежит
+
+---
+
+Нет, используй GPU
+
+---
+
+Try again

@@ -3,15 +3,32 @@
   "checkpoint_id": "fadbd5d38eb4",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 5,
+  "checkpoints_count": 13,
   "files_touched": [
     ".gitignore",
     "README.md",
     "SUBMISSION_PLAN.md",
     "SUM.md",
+    "artifacts/vectors/brainiac_cosine/dataset1_test_vectors.npz",
+    "artifacts/vectors/brainiac_cosine/dataset1_val_vectors.npz",
+    "artifacts/vectors/brainiac_cosine/dataset2_test_vectors.npz",
+    "artifacts/vectors/brainiac_cosine/dataset2_val_vectors.npz",
+    "artifacts/vectors/brainiac_cosine/dataset3_test_vectors.npz",
+    "artifacts/vectors/brainiac_cosine/dataset3_val_vectors.npz",
+    "artifacts/vectors/fusion_default_plus_pca/dataset1_test_vectors.npz",
+    "artifacts/vectors/fusion_default_plus_pca/dataset1_val_vectors.npz",
+    "artifacts/vectors/fusion_default_plus_pca/dataset2_test_vectors.npz",
+    "artifacts/vectors/fusion_default_plus_pca/dataset2_val_vectors.npz",
+    "artifacts/vectors/fusion_default_plus_pca/dataset3_test_vectors.npz",
+    "artifacts/vectors/fusion_default_plus_pca/dataset3_val_vectors.npz",
+    "brainiac_adapter_train.py",
+    "brainiac_cosine_retrieval.py",
     "classical_retrieval.py",
+    "server_run_brainiac_gpu.sh",
     "submissions/all_fusion_default_plus_pca_c128_a100.csv",
     "submissions/all_pca_ridge_c128_a100.csv",
+    "submissions/brainiac_cosine_submission.csv",
+    "submissions/cosine_vectors_fusion_default_plus_pca.csv",
     "submissions/d2_fusion_dataset2.csv",
     "submissions/d2_fusion_grid.csv",
     "submissions/d2_mask_crop32.csv",
@@ -34,13 +51,19 @@
       "transcript": "/fa/dbd5d38eb4/0/full.jsonl",
       "content_hash": "/fa/dbd5d38eb4/0/content_hash.txt",
       "prompt": "/fa/dbd5d38eb4/0/prompt.txt"
+    },
+    {
+      "metadata": "/fa/dbd5d38eb4/1/metadata.json",
+      "transcript": "/fa/dbd5d38eb4/1/full.jsonl",
+      "content_hash": "/fa/dbd5d38eb4/1/content_hash.txt",
+      "prompt": "/fa/dbd5d38eb4/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 726414,
+    "input_tokens": 837300,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 16530304,
-    "output_tokens": 65661,
-    "api_call_count": 150
+    "cache_read_tokens": 17056896,
+    "output_tokens": 76215,
+    "api_call_count": 168
   }
 }
