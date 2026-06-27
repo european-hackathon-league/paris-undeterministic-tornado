@@ -2,6 +2,11 @@
 
 Your task is to build a cross-modal medical image retrieval system. For each query brain MRI volume, rank all candidate target MRI volumes from the matching gallery so that the true same-subject target appears as high as possible.
 
+## Kaggle Challenge
+
+https://www.kaggle.com/t/b33ec3e76c3d4e16a6b56852470b3ebf
+
+
 ## Modalities
 
 - Query: T1 post-contrast MRI
