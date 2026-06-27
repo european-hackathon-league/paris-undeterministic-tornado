@@ -159,4 +159,43 @@
 
 ## Что осталось
 
-Полноценный deep-learning запуск на GPU из текущего sandbox не был доведен до рабочего пайплайна, потому что сетевой доступ и установка нужного DL-стека были ограничены средой. Поэтому пока решение построено на сильных classical + PCA/Ridge методах.
+Текущий проверенный best на Kaggle: `0.62522`.
+
+Лучший файл:
+
+```text
+submissions/mix_hung_d1pca_d2rankfusion_canon20_grid_d3pca.csv
+```
+
+Он состоит из:
+- `dataset1`: `pca_ridge_c128_a100` + Hungarian assignment;
+- `dataset2`: rank-fusion canonical PCA-axis `size=20` + старый `pca/grid` blend, затем Hungarian assignment;
+- `dataset3`: `pca_ridge_c128_a100` + Hungarian assignment.
+
+Важные подтвержденные результаты:
+- `all_pca_ridge_c128_a100.csv`: `0.55714`;
+- `all_pca_ridge_c128_a100_hungarian.csv`: `0.59436`;
+- `mix_hung_d1pca_d2canonpca20_d3pca.csv`: `0.62491`;
+- `mix_hung_d1pca_d2rankfusion_canon20_grid_d3pca.csv`: `0.62522`.
+
+Самый важный вывод: главный bottleneck остается `dataset2`.
+
+Partial scores:
+- `d1_pca_ridge_c128_a100.csv`: displayed `0.29244`, то есть d1 MRR примерно `0.87732`;
+- `d3_pca_ridge_c128_a100_hungarian.csv`: displayed `0.23016`, то есть d3 MRR примерно `0.69048`;
+- `d2_rankfusion_canon20_080_pca075grid025_020_hungarian.csv`: displayed `0.10414`, то есть d2 MRR примерно `0.31242`.
+
+Что дополнительно пробовалось и не стало best:
+- BrainIAC cosine: `0.15121`;
+- BrainIAC adapter training: слабые holdout/all-gallery metrics;
+- BrainIAC patch-token matching для d2: хуже classical/canonical;
+- scratch 3D contrastive model на GPU: не стал конкурентным;
+- leakage diagnostics по order/header/file-size/sample submission: не помогли;
+- MIND-like descriptors и lesion-focused descriptors: ниже canonical baseline;
+- `d2_canonical_pca24_c128_hungarian.csv`: displayed `0.08255`, хуже `size=20`.
+
+Следующие разумные шаги:
+- добавить кэширование в `canonical_pca_retrieval.py`, чтобы быстро перебирать canonical features;
+- развивать `dataset2` canonical/rank-fusion направление вокруг `size=20`;
+- не тратить время на общий BrainIAC cosine/scratch 3D без новой сильной гипотезы;
+- держать `ONBOARD.md` как основной handoff для нового ML developer/agent.

@@ -23,6 +23,7 @@ This script:
 import argparse
 import csv
 import os
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -76,8 +77,9 @@ class ViTBackboneNet(nn.Module):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         features = self.backbone(x)
-        cls_token = features[0][:, 0]
-        return F.normalize(cls_token, dim=1)
+        token_embeddings = features[0]
+        pooled = token_embeddings.mean(dim=1)
+        return F.normalize(pooled, dim=1)
 
 
 class ManifestDataset(Dataset):
@@ -152,10 +154,11 @@ def normalize_nonzero(volume: np.ndarray) -> np.ndarray:
         return volume
     mean = float(foreground.mean())
     std = float(foreground.std())
-    if std < 1e-6:
-        return volume - mean
     out = volume.copy()
-    out[mask] = (out[mask] - mean) / std
+    if std < 1e-6:
+        out[mask] = out[mask] - mean
+    else:
+        out[mask] = (out[mask] - mean) / std
     out[~mask] = 0.0
     return out
 
@@ -227,12 +230,22 @@ def save_pool_vectors(
     )
 
 
-def validate_submission(data_root: Path, submission: Path) -> dict[str, object]:
+def validate_submission(
+    data_root: Path,
+    submission: Path,
+    datasets: tuple[str, ...] = ("dataset1", "dataset2", "dataset3"),
+    splits: tuple[str, ...] = ("val", "test"),
+) -> dict[str, object]:
     rows = read_csv(submission)
+    duplicate_query_ids = sorted(
+        query_id
+        for query_id, count in Counter(row["query_id"] for row in rows).items()
+        if count > 1
+    )
     by_query = {row["query_id"]: row["target_id_ranking"].split() for row in rows}
 
     expected: dict[str, tuple[str, str, set[str]]] = {}
-    for pool in all_prediction_pools(data_root):
+    for pool in all_prediction_pools(data_root, datasets, splits):
         queries = read_csv(pool.query_csv)
         targets = {row["target_id"] for row in read_csv(pool.gallery_csv)}
         for row in queries:
@@ -240,6 +253,8 @@ def validate_submission(data_root: Path, submission: Path) -> dict[str, object]:
 
     counts: dict[str, int] = {}
     errors: list[str] = []
+    for query_id in duplicate_query_ids:
+        errors.append(f"duplicate query_id row {query_id}")
     for query_id, ranking in by_query.items():
         if query_id not in expected:
             errors.append(f"unexpected query_id {query_id}")
@@ -262,6 +277,7 @@ def validate_submission(data_root: Path, submission: Path) -> dict[str, object]:
     return {
         "submission": str(submission),
         "rows": len(rows),
+        "expected_rows": len(expected),
         "counts": counts,
         "errors": errors[:20],
         "num_errors": len(errors),
@@ -347,7 +363,7 @@ def main() -> None:
         )
 
     write_csv(out, submission_rows, ["query_id", "target_id_ranking"])
-    report = validate_submission(data_root, out)
+    report = validate_submission(data_root, out, tuple(args.datasets), tuple(args.splits))
     print(pd.Series(report, dtype=object).to_json(indent=2), flush=True)
 
 

@@ -1,8 +1,28 @@
+# data + heavy artifacts
 ehl-paris-medical-image-retrieval
 .classical_cache/
+.canonical_cache/
+.d2cache/
 .uv-cache/
 .uv-python/
 .venv/
 __pycache__/
-.ssh_known_hosts
 artifacts/
+
+# generated outputs
+submissions/
+submission.csv
+*.log
+*.pdf
+
+# credentials / hosts
+.ssh_known_hosts
+
+# editor / tooling / agent state
+.idea/
+.cache/
+.mplconfig/
+.pycache/
+.claude/
+.codex/
+.entire/
