@@ -1,4 +1,5 @@
 ehl-paris-medical-image-retrieval
+
 .classical_cache/
 .uv-cache/
 .uv-python/
@@ -6,3 +7,11 @@ ehl-paris-medical-image-retrieval
 __pycache__/
 .ssh_known_hosts
 artifacts/
+
+.DS_Store
+.claude/
+.cursor/
+hackathon_brief.pdf
+hackathon_brief.tex
+look.py
+presentation_TUM_AI.pdf
