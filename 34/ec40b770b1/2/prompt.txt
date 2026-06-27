@@ -1,0 +1,21 @@
+Crete a graphs using pyplot using data from lol.log
+
+---
+
+Where is this files?
+
+---
+
+Look at lose we use in brainiac_adapter_train think about changing it
+
+---
+
+Because currently mrr jumps
+
+---
+
+It shuld stop based on loss, not all_gallery_mrr
+
+---
+
+Continue

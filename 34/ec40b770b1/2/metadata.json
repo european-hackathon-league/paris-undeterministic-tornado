@@ -1,0 +1,106 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "34ec40b770b1",
+  "session_id": "019f09f8-baa2-7193-8f31-f3370541e17b",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-27T19:24:21.206974Z",
+  "branch": "research/template-normalization",
+  "checkpoints_count": 4,
+  "save_step_count": 3,
+  "files_touched": [
+    "brainiac_adapter_train.py",
+    "brainiac_cosine_retrieval.py",
+    "plot_lol_log.py"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "1372f3114f3c",
+  "token_usage": {
+    "input_tokens": 161832,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 921600,
+    "output_tokens": 11681,
+    "api_call_count": 36
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-06-27T19:24:21.198449Z",
+    "agent_lines": 285,
+    "agent_removed": 46,
+    "human_added": 3638,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 3923,
+    "total_lines_changed": 3970,
+    "agent_percentage": 8.337531486146096,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 160,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".idea/.gitignore": 10,
+        ".idea/misc.xml": 7,
+        ".idea/modules.xml": 8,
+        ".idea/paris.iml": 9,
+        ".idea/vcs.xml": 6,
+        "lol.log": 120
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 1999,
+      "user_lines_removed": 250,
+      "agent_lines_added": 15630,
+      "agent_lines_removed": 16,
+      "user_added_per_file": {
+        "assignment_rerank.py": 143,
+        "brainiac_patch_retrieval.py": 324,
+        "contrastive_3d_train.py": 5,
+        "lol.log": 250,
+        "submissions/all_pca_ridge_c128_a100_hungarian.csv": 378,
+        "submissions/d2_blend_pca075_grid025_hungarian.csv": 141,
+        "submissions/d2_fusion_grid_hungarian.csv": 141,
+        "submissions/d2_pca_ridge_c128_a100_hungarian.csv": 141,
+        "submissions/d3_pca_ridge_c128_a100_hungarian.csv": 98,
+        "submissions/mix_hung_d1pca_d2pca075grid025_d3pca.csv": 378
+      },
+      "user_removed_per_file": {
+        "lol.log": 250
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 2893,
+      "user_lines_removed": 250,
+      "agent_lines_added": 16242,
+      "agent_lines_removed": 46,
+      "user_added_per_file": {
+        "assignment_rerank.py": 143,
+        "brainiac_patch_retrieval.py": 324,
+        "canonical_pca_retrieval.py": 215,
+        "contrastive_3d_train.py": 5,
+        "lesion_retrieval.py": 190,
+        "lol.log": 250,
+        "mind_retrieval.py": 207,
+        "submissions/all_pca_ridge_c128_a100_hungarian.csv": 378,
+        "submissions/d2_blend_pca075_grid025_hungarian.csv": 141,
+        "submissions/d2_fusion_grid_hungarian.csv": 141,
+        "submissions/d2_lesion40_hungarian.csv": 141,
+        "submissions/d2_mind32_axisdiag_hungarian.csv": 141,
+        "submissions/d2_pca_ridge_c128_a100_hungarian.csv": 141,
+        "submissions/d3_pca_ridge_c128_a100_hungarian.csv": 98,
+        "submissions/mix_hung_d1pca_d2pca075grid025_d3pca.csv": 378
+      },
+      "user_removed_per_file": {
+        "lol.log": 250
+      }
+    }
+  ]
+}
