@@ -35,7 +35,9 @@ from scipy.optimize import linear_sum_assignment
 from sklearn.preprocessing import normalize
 
 from synthetic_d2_eval import _load_grid, read_pairs, resolve_image_path
-from d2_methods import _register_to_template, flat_feature, _fit_pca_ridge
+from d2_methods import _register_to_template, flat_feature, rich_feature, _fit_pca_ridge  # noqa: F401
+
+FEAT_FN = flat_feature  # swapped to rich_feature when --rich is passed
 
 
 DEFAULT_DATA_ROOT = Path("ehl-paris-medical-image-retrieval")
@@ -59,27 +61,65 @@ def normalized_feature(
     data_root: Path, image_path: str, image_id: str, grid: int, template: np.ndarray,
     cache_dir: Path, register: bool = True
 ) -> np.ndarray:
-    tag = f"g{grid}" if register else f"g{grid}_noreg"
+    rich = FEAT_FN is rich_feature
+    tag = f"g{grid}" + ("_rich" if rich else "") + ("" if register else "_noreg")
     cache = cache_dir / f"{image_id}_{tag}.npy"
     if cache.exists():
         return np.load(cache)
     vol = _load_grid(data_root, image_path, grid)
-    feat = flat_feature(_register_to_template(vol, template) if register else vol)
+    feat = FEAT_FN(_register_to_template(vol, template) if register else vol)
     cache_dir.mkdir(parents=True, exist_ok=True)
     np.save(cache, feat)
     return feat
 
 
-def build_model(data_root: Path, grid: int, components: int, alpha: float):
+def build_model(data_root: Path, grid: int, components: int, alpha: float,
+                fit_pair_csv: Path | None = None, synth_aug_k: int = 0):
+    # templates ALWAYS come from the clean registered dataset1 train pairs
     pairs = read_pairs(data_root)
     tq = np.stack([_load_grid(data_root, p["query_image"], grid) for p in pairs])
     tt = np.stack([_load_grid(data_root, p["target_image"], grid) for p in pairs])
     t1_tpl = tq.mean(axis=0)
     t2_tpl = tt.mean(axis=0)
-    qf = np.stack([flat_feature(v) for v in tq])
-    tf = np.stack([flat_feature(v) for v in tt])
+
+    if synth_aug_k > 0:
+        # fit the map on clean pairs + K geom+contrast augmented copies (registered)
+        from synthetic_d2_eval import deform, _rng_for
+        from d2_methods import _contrast_jitter
+        dkw = dict(max_rot_deg=12, max_shift=6, elastic_sigma=8, elastic_alpha=3)
+        qf = [FEAT_FN(v) for v in tq]
+        tf = [FEAT_FN(v) for v in tt]
+        for a in range(synth_aug_k):
+            for i, v in enumerate(tq):
+                w = _contrast_jitter(deform(v, _rng_for(1000 + a, f"q{i}"), **dkw), _rng_for(2000 + a, f"q{i}"))
+                qf.append(FEAT_FN(_register_to_template(w, t1_tpl)))
+            for i, v in enumerate(tt):
+                w = _contrast_jitter(deform(v, _rng_for(3000 + a, f"t{i}"), **dkw), _rng_for(4000 + a, f"t{i}"))
+                tf.append(FEAT_FN(_register_to_template(w, t2_tpl)))
+            print(f"  synth-aug copy {a+1}/{synth_aug_k} built", flush=True)
+        qf = np.stack(qf); tf = np.stack(tf)
+        n_fit = len(qf)
+    elif fit_pair_csv is None:
+        # fit the map on the same clean pairs (already aligned -> no registration)
+        qf = np.stack([FEAT_FN(v) for v in tq])
+        tf = np.stack([FEAT_FN(v) for v in tt])
+        n_fit = len(pairs)
+    else:
+        # fit the map on a (possibly augmented/deformed) manifest; register each
+        # to its template first so it lands in the common frame
+        fit_pairs = read_csv(Path(fit_pair_csv))
+        qf, tf = [], []
+        for i, p in enumerate(fit_pairs):
+            qv = _load_grid(data_root, p["query_image"], grid)
+            tv = _load_grid(data_root, p["target_image"], grid)
+            qf.append(FEAT_FN(_register_to_template(qv, t1_tpl)))
+            tf.append(FEAT_FN(_register_to_template(tv, t2_tpl)))
+            if (i + 1) % 100 == 0:
+                print(f"  fit-feature {i+1}/{len(fit_pairs)}", flush=True)
+        qf = np.stack(qf); tf = np.stack(tf)
+        n_fit = len(fit_pairs)
     q_pca, t_pca, ridge = _fit_pca_ridge(qf, tf, components, alpha)
-    print(f"built templates + pca/ridge from {len(pairs)} train pairs", flush=True)
+    print(f"built templates from {len(pairs)} clean pairs; map fit on {n_fit} pairs", flush=True)
     return t1_tpl, t2_tpl, q_pca, t_pca, ridge
 
 
@@ -131,7 +171,14 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--grid", type=int, default=44)
     p.add_argument("--components", type=int, default=128)
     p.add_argument("--alpha", type=float, default=100.0)
+    p.add_argument("--fit-pair-csv", type=Path, default=None,
+                   help="Fit the PCA/Ridge map on this (e.g. augmented) manifest; "
+                        "templates still come from clean dataset1 train pairs.")
+    p.add_argument("--synth-aug-k", type=int, default=0,
+                   help="Fit the map on clean + K synthetic geom+contrast augmented "
+                        "copies of dataset1 train (local, no extra data needed).")
     p.add_argument("--assignment", action="store_true")
+    p.add_argument("--rich", action="store_true", help="Use multi-channel rich feature (intensity+edge+half-scale).")
     p.add_argument("--no-register", action="store_true",
                    help="Skip template registration (use raw downsampled grid feature). "
                         "For already-aligned sets like dataset3.")
@@ -141,7 +188,11 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    model = build_model(args.data_root, args.grid, args.components, args.alpha)
+    global FEAT_FN
+    if args.rich:
+        FEAT_FN = rich_feature
+    model = build_model(args.data_root, args.grid, args.components, args.alpha,
+                        args.fit_pair_csv, args.synth_aug_k)
     rows: list[dict[str, str]] = []
     for dataset in args.datasets:
         for split in args.splits:

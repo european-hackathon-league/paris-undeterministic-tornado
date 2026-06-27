@@ -268,6 +268,157 @@ def _register_to_template(vol, template, opt_size=20):
     return _apply_rigid(vol, scaled)
 
 
+def _register_affine_to_template(vol, template, opt_size=24, rigid_init=None):
+    """Affine (12-param) alignment to template, initialized from the rigid fit.
+    Params = [rigid6, a00..a22 perturbation as 6 off-diagonal/scale terms]."""
+    g = vol.shape[0]
+    zt = zoom(template, opt_size / template.shape[0], order=1)
+    zv = zoom(vol, opt_size / g, order=1)
+    center = (np.asarray(zv.shape) - 1) / 2.0
+
+    rigid = rigid_init if rigid_init is not None else np.zeros(6)
+    rot0, _ = _rigid_matrix(rigid)
+
+    def apply(mat, shift):
+        offset = center - mat @ center + shift
+        return affine_transform(zv, mat, offset=offset, order=1, mode="constant", cval=0.0)
+
+    # optimize a 9-dof linear matrix (init = rigid rotation) + 3 translation
+    def neg(p):
+        mat = rot0 + p[:9].reshape(3, 3)
+        return -_ncc(zt, apply(mat, rigid[3:6] * opt_size / g + p[9:12]))
+
+    x0 = np.zeros(12)
+    res = minimize(neg, x0, method="Powell", options={"maxiter": 120, "xtol": 0.02, "ftol": 0.005})
+    mat = rot0 + res.x[:9].reshape(3, 3)
+    shift = rigid[3:6] * opt_size / g + res.x[9:12]
+    # apply at native grid
+    cfull = (np.asarray(vol.shape) - 1) / 2.0
+    sh = shift * g / opt_size
+    offset = cfull - mat @ cfull + sh
+    return affine_transform(vol, mat, offset=offset, order=1, mode="constant", cval=0.0)
+
+
+def _best_rigid_params(vol, template, opt_size=20):
+    g = vol.shape[0]
+    zt = zoom(template, opt_size / template.shape[0], order=1)
+    zv = zoom(vol, opt_size / g, order=1)
+
+    def neg(params):
+        return -_ncc(zt, _apply_rigid(zv, params))
+
+    best_p, best_f = np.zeros(6), neg(np.zeros(6))
+    for start in (np.zeros(6), np.array([0.25, 0, 0, 0, 0, 0]),
+                  np.array([0, 0.25, 0, 0, 0, 0]), np.array([0, 0, 0.25, 0, 0, 0])):
+        res = minimize(neg, start, method="Powell", options={"maxiter": 80, "xtol": 0.03, "ftol": 0.005})
+        if res.fun < best_f:
+            best_f, best_p = res.fun, res.x
+    best_p = best_p.copy()
+    best_p[3:6] *= g / opt_size
+    return best_p
+
+
+def m_template_affine(data):
+    t1 = data["train_q"].mean(axis=0); t2 = data["train_t"].mean(axis=0)
+    tq = np.stack([flat_feature(v) for v in data["train_q"]])
+    tt = np.stack([flat_feature(v) for v in data["train_t"]])
+    def emb(vol, tpl):
+        rig = _best_rigid_params(vol, tpl)
+        return flat_feature(_register_affine_to_template(vol, tpl, rigid_init=rig))
+    eq = np.stack([emb(v, t1) for v in data["eval_q"]]); print("  affine q done", flush=True)
+    et = np.stack([emb(v, t2) for v in data["eval_t"]]); print("  affine t done", flush=True)
+    return _pca_ridge_scores(tq, tt, eq, et)
+
+
+def rich_feature(vol):
+    """Post-registration multi-channel feature: intensity + gradient-magnitude
+    (edges) + a half-scale intensity map. More discriminative than raw intensity."""
+    edge = np.sqrt(sum(sobel(vol, axis=a) ** 2 for a in range(3))).astype(np.float32)
+    half = zoom(vol, 0.5, order=1).astype(np.float32)
+    parts = [_l2(vol.reshape(-1)), _l2(edge.reshape(-1)), _l2(half.reshape(-1))]
+    return np.concatenate(parts).astype(np.float32)
+
+
+def m_template_rich(data):
+    t1 = data["train_q"].mean(axis=0); t2 = data["train_t"].mean(axis=0)
+    tq = np.stack([rich_feature(v) for v in data["train_q"]])
+    tt = np.stack([rich_feature(v) for v in data["train_t"]])
+    eq = np.stack([rich_feature(_register_to_template(v, t1)) for v in data["eval_q"]])
+    print("  rich q done", flush=True)
+    et = np.stack([rich_feature(_register_to_template(v, t2)) for v in data["eval_t"]])
+    print("  rich t done", flush=True)
+    return _pca_ridge_scores(tq, tt, eq, et)
+
+
+def _pca_axes(vol):
+    mask = vol > 0.05
+    coords = np.column_stack(np.where(mask)).astype(np.float64)
+    if len(coords) < 32:
+        coords = np.column_stack(np.where(np.ones_like(vol, dtype=bool))).astype(np.float64)
+    center = coords.mean(axis=0)
+    cov = np.cov((coords - center).T)
+    vals, vecs = np.linalg.eigh(cov)
+    vecs = vecs[:, np.argsort(vals)[::-1]]
+    if np.linalg.det(vecs) < 0:
+        vecs[:, 2] *= -1
+    return center, vecs
+
+
+def _register_robust(vol, template, tpl_axes, opt_size=24):
+    """Rigid NCC alignment with PCA-axis initialization + sign-flip multistarts.
+    Better than identity-only starts when the pose rotation is large."""
+    g = vol.shape[0]
+    zt = zoom(template, opt_size / template.shape[0], order=1)
+    zv = zoom(vol, opt_size / g, order=1)
+    center = (np.asarray(zv.shape) - 1) / 2.0
+    _, Vv = _pca_axes(zv)
+    Vt = tpl_axes
+
+    def apply_mat(M, shift):
+        offset = center - M @ center + shift
+        return affine_transform(zv, M, offset=offset, order=1, mode="constant", cval=0.0)
+
+    # PCA-axis init rotations (4 sign combos preserving det=+1)
+    inits = []
+    for s in ([1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]):
+        R = Vt @ np.diag(s) @ Vv.T
+        if np.linalg.det(R) > 0:
+            inits.append(R)
+    inits.append(np.eye(3))  # identity fallback
+
+    best_vol, best_f = None, np.inf
+    for R0 in inits:
+        def neg(p):
+            M = _rigid_matrix(p)[0] @ R0
+            return -_ncc(zt, apply_mat(M, p[3:6]))
+        res = minimize(neg, np.zeros(6), method="Powell",
+                       options={"maxiter": 60, "xtol": 0.03, "ftol": 0.005})
+        if res.fun < best_f:
+            best_f = res.fun
+            Mres = _rigid_matrix(res.x)[0] @ R0
+            shift = res.x[3:6]
+            best_vol = (Mres, shift)
+    # apply at native grid
+    M, shift = best_vol
+    cfull = (np.asarray(vol.shape) - 1) / 2.0
+    sh = shift * g / opt_size
+    offset = cfull - M @ cfull + sh
+    return affine_transform(vol, M, offset=offset, order=1, mode="constant", cval=0.0)
+
+
+def m_template_robust(data):
+    t1 = data["train_q"].mean(axis=0); t2 = data["train_t"].mean(axis=0)
+    _, a1 = _pca_axes(zoom(t1, 24 / t1.shape[0], order=1))
+    _, a2 = _pca_axes(zoom(t2, 24 / t2.shape[0], order=1))
+    tq = np.stack([flat_feature(v) for v in data["train_q"]])
+    tt = np.stack([flat_feature(v) for v in data["train_t"]])
+    eq = np.stack([flat_feature(_register_robust(v, t1, a1)) for v in data["eval_q"]])
+    print("  robust q done", flush=True)
+    et = np.stack([flat_feature(_register_robust(v, t2, a2)) for v in data["eval_t"]])
+    print("  robust t done", flush=True)
+    return _pca_ridge_scores(tq, tt, eq, et)
+
+
 def m_template(data):
     t1_tpl = data["train_q"].mean(axis=0)
     t2_tpl = data["train_t"].mean(axis=0)
@@ -285,6 +436,45 @@ def m_template_canon(data):
     return _zscore_rows(m_template(data)) + _zscore_rows(m_canonical(data))
 
 
+def _contrast_jitter(vol, rng):
+    """Random gamma + gain on the normalized [0,1] foreground (modality robustness)."""
+    gamma = float(np.exp(rng.uniform(-0.4, 0.4)))
+    gain = float(np.exp(rng.uniform(-0.2, 0.2)))
+    out = np.clip(gain * np.power(np.clip(vol, 0, 1), gamma), 0, 1).astype(np.float32)
+    return out
+
+
+def m_template_augfit(data, k_aug=2):
+    """Template normalization, but PCA/Ridge is fit on clean train pairs PLUS k
+    geom+contrast augmented copies, so the cross-modal map sees deformation."""
+    from synthetic_d2_eval import deform, _rng_for
+
+    t1 = data["train_q"].mean(axis=0); t2 = data["train_t"].mean(axis=0)
+    dkw = dict(max_rot_deg=12, max_shift=6, elastic_sigma=8, elastic_alpha=3)
+
+    qf, tf = [], []
+    for v in data["train_q"]:
+        qf.append(flat_feature(v))
+    for v in data["train_t"]:
+        tf.append(flat_feature(v))
+    for a in range(k_aug):
+        for i, v in enumerate(data["train_q"]):
+            w = _contrast_jitter(deform(v, _rng_for(1000 + a, f"q{i}"), **dkw), _rng_for(2000 + a, f"q{i}"))
+            qf.append(flat_feature(_register_to_template(w, t1)))
+        for i, v in enumerate(data["train_t"]):
+            w = _contrast_jitter(deform(v, _rng_for(3000 + a, f"t{i}"), **dkw), _rng_for(4000 + a, f"t{i}"))
+            tf.append(flat_feature(_register_to_template(w, t2)))
+        print(f"  augfit built aug copy {a+1}/{k_aug}", flush=True)
+    qf = np.stack(qf); tf = np.stack(tf)
+    q_pca, t_pca, ridge = _fit_pca_ridge(qf, tf, 128, 100.0)
+
+    eq = np.stack([flat_feature(_register_to_template(v, t1)) for v in data["eval_q"]])
+    et = np.stack([flat_feature(_register_to_template(v, t2)) for v in data["eval_t"]])
+    qz = normalize(ridge.predict(q_pca.transform(eq)))
+    tz = normalize(t_pca.transform(et))
+    return (qz @ tz.T).astype(np.float32)
+
+
 METHODS = {
     "raw_grid": m_raw_grid,
     "pca_ridge_grid": m_pca_ridge_grid,
@@ -294,5 +484,9 @@ METHODS = {
     "invariant": m_invariant,
     "register": m_register,
     "template": m_template,
+    "template_affine": m_template_affine,
+    "template_augfit": m_template_augfit,
+    "template_robust": m_template_robust,
+    "template_rich": m_template_rich,
     "template_canon": m_template_canon,
 }
