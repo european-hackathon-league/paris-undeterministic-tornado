@@ -4,6 +4,7 @@ data/
 .classical_cache/
 .canonical_cache/
 .d2cache/
+.deformcache/
 .uv-cache/
 .uv-python/
 .venv/
@@ -18,6 +19,8 @@ deedsBCV/
 submissions/
 submission.csv
 *.log
+*.jpg
+tmp/
 *.pdf
 *.tex.pdf
 look.py

@@ -137,7 +137,7 @@ release. Multi-hour, uncertain. Probes saved in tmp/brats_probe/.
 
 ### GATE PASSED: external BraTS identity match WORKS (2026-06-28, on server)
 Downloaded full BraTS-GLI 2023 (1248 subjects, Kaggle aiocta/brats2023-part-1 +
-part-2zip) + competition data to server 134.199.198.104 (/root/work). Gate test
+part-2zip) + competition data to server &lt;REDACTED&gt; (/root/work). Gate test
 (/root/work/gate.py): for known d1 train pairs, identify query(ceT1)→library t1c
 and target(T2)→library t2w INDEPENDENTLY by reorient(flip x,y)+brain-mask z-norm
 cosine at 64^3. Result: **self-consistency q-subj==t-subj = 62% (31/50)** vs 0.08%
