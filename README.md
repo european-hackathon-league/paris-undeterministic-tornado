@@ -94,7 +94,7 @@ assigned target is forced to rank 1, the rest by similarity.
 | leak-free, d3 bbox-grid, **no** Hungarian | 0.65057 | Hungarian = +0.068 |
 | d1+d2 template + **d3 raw-grid** | 0.90444 | d3 uses the geometry shortcut |
 | d2 Sinkhorn rerank | 0.89133 | regressed → off by default |
-| external BraTS matching (removed) | 0.91981 | data leak, not in this repo |
+| external BraTS matching (removed) | **0.93127** | **best overall**; data leak — BraTS-identity overrides (44 confident pairs) on the deformable d2 base; not in this repo |
 
 ## 5. MIND (Modality-Independent Neighbourhood Descriptor)
 
@@ -124,8 +124,12 @@ git history); findings:
   ship the **bbox + MIND** variant (0.700) as the honest middle.
 - **External BraTS matching (the 1.0 exploit).** d1/d2 are public **BraTS-GLI**
   volumes. Registering each warped d2 image intramodally to the clean public BraTS
-  library recovers the subject identity → its known T2 → the pairing → ~1.0 (works
-  on private). This is a genuine data leak; the exploit code has been **removed**.
+  library recovers the subject identity → its known T2 → the pairing. Verified best
+  public **0.93127** (override the deformable-d2 base for the 44/140 pairs where the
+  ceT1→t1c and T2→t2w identifications independently agree; forcing more pairs
+  regresses). Capped below 1.0 by the d2 elastic warp (limits identification) and
+  ~30% of subjects missing from the public training-split library. This is a genuine
+  data leak; the exploit code has been **removed** from this repo.
 - **Public-LB probing.** A single-query partial submission scores `1/(120·rank)`,
   revealing each validation answer — inflates public only, not private. Not used.
 
