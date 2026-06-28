@@ -106,13 +106,13 @@ def arrow(s, x, y, w=0.36, col=MUTE):
 s = slide()
 box(s, 0, 0, 13.333, 0.16, fill=CYAN)
 box(s, 0, 7.34, 13.333, 0.16, fill=MAG)
-text(s, 0.9, 2.35, 11.5, 1.4,
+text(s, 0.9, 1.95, 11.5, 1.4,
      [[("Cross-Modal Brain MRI Retrieval", 46, WHITE, True)]])
-text(s, 0.9, 3.45, 11.5, 0.7,
+text(s, 0.92, 3.0, 11.5, 0.7,
      [[("Matching T1 post-contrast queries to their T2 targets across three datasets", 19, CYAN, False)]])
-text(s, 0.92, 4.55, 11.5, 0.5,
+text(s, 0.92, 4.05, 11.5, 0.5,
      [[("EHL Paris  ·  Medical Image Retrieval Challenge", 15, MUTE, True)]])
-text(s, 0.92, 5.5, 11.5, 0.5,
+text(s, 0.92, 4.95, 11.5, 0.5,
      [[("A research walkthrough:  the data → our method → a data-leak we uncovered → honest metrics", 15, MUTE, False)]])
 
 # ============================================================ 2. THE DATA -> WHY CONTRASTIVE
@@ -221,7 +221,7 @@ bullets(s, 0.95, 3.7, 5.4, 2.5, [
     ("•", "Augmentation on the real server → d2 → 0.56.", RED),
 ], size=12.5, gap=11)
 box(s, 6.85, 3.0, 5.9, 3.3, fill=PANEL, round_=True)
-text(s, 7.15, 3.2, 5.4, 0.4, [[("WHY (OUR READING)", 12, LIME, True)]])
+text(s, 7.15, 3.2, 5.4, 0.4, [[("WHY", 12, LIME, True)]])
 bullets(s, 7.15, 3.7, 5.4, 2.5, [
     ("→", "Only ~350 base subjects — a couple of copies each multiplies samples, not subject diversity.", LIME),
     ("→", "Synthetic warps don't match real d2 transforms; the model overfits the synthetic distribution.", LIME),
@@ -234,23 +234,24 @@ header(s, "Results", LIME, "Honest, leak-free metrics")
 rows = [
     ("Raw cosine, no Hungarian", "0.651", AMBER, 0.651),
     ("+ Hungarian assignment", "0.718", CYAN, 0.718),
-    ("+ d3 grid feature (if legitimate)", "0.904", LIME, 0.904),
+    ("+ d3 bbox+MIND (honest leak-free)", "0.80462", LIME, 0.80462),
+    ("+ d3 grid feature (if legitimate)", "0.904", MUTE, 0.904),
 ]
-y = 2.05
+y = 1.95
 for name, val, col, frac in rows:
     text(s, 0.65, y, 5.6, 0.4, [[(name, 14, WHITE, False)]], anchor=MSO_ANCHOR.MIDDLE)
     box(s, 6.3, y + 0.05, 5.3 * frac, 0.34, fill=col, round_=True)
     text(s, 11.75, y, 1.4, 0.4, [[(val, 15, col, True)]], anchor=MSO_ANCHOR.MIDDLE)
-    y += 0.62
-text(s, 0.65, 4.0, 12.1, 0.4, [[("Per-dataset (leak-free)", 13, MUTE, True)]])
-for i, (d, v, c) in enumerate([("dataset 1", "0.964", CYAN), ("dataset 2", "0.749  (wall)", MAG), ("dataset 3", "0.442  (bbox)", AMBER)]):
+    y += 0.53
+text(s, 0.65, 4.05, 12.1, 0.4, [[("Per-dataset (leak-free)", 13, MUTE, True)]])
+for i, (d, v, c) in enumerate([("dataset 1", "0.964", CYAN), ("dataset 2", "0.749  (wall)", MAG), ("dataset 3", "0.701  (bbox+MIND)", AMBER)]):
     xx = 0.65 + i * 4.15
     box(s, xx, 4.45, 3.9, 1.0, fill=PANEL, round_=True); box(s, xx, 4.45, 0.08, 1.0, fill=c)
     text(s, xx + 0.25, 4.58, 3.5, 0.4, [[(d, 13, MUTE, True)]])
     text(s, xx + 0.22, 4.9, 3.5, 0.5, [[(v, 22, c, True)]])
 text(s, 0.65, 5.75, 12.1, 0.9, [[
-    ("Hungarian is worth +0.068. The reproduced leak hits 0.931 — but our honest pipeline tops out at "
-     "0.718 (strict) / 0.904 (d3-grid), and d2's elastic warp is the genuine remaining wall.",
+    ("Hungarian is worth +0.068. Honest leak-free tops out at 0.80462 (d3 bbox+MIND); counting the d3 "
+     "geometry shortcut gives 0.904. The reproduced leak hits 0.931 — d2's elastic warp is the genuine wall.",
      14, WHITE, False)]], line_spacing=1.2)
 
 prs.save("EHL_Paris_Medical_Retrieval.pptx")
