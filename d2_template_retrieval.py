@@ -34,10 +34,22 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 from sklearn.preprocessing import normalize
 
-from synthetic_d2_eval import _load_grid, read_pairs, resolve_image_path
+from synthetic_d2_eval import _load_grid, read_pairs, resolve_image_path, load_normalized, downsample
 from d2_methods import _register_to_template, flat_feature, rich_feature, sliceview_feature, _fit_pca_ridge  # noqa: F401
 
 FEAT_FN = flat_feature  # swapped to rich_feature when --rich is passed
+BBOX_CROP = False        # crop to foreground (brain) bbox before downsample
+
+
+def _load_grid_maybe_bbox(data_root, image_path, grid, margin=2):
+    if not BBOX_CROP:
+        return _load_grid(data_root, image_path, grid)
+    vol, mask = load_normalized(resolve_image_path(data_root, image_path))
+    idx = np.where(mask)
+    if len(idx[0]) > 32:
+        sl = tuple(slice(max(0, c.min() - margin), c.max() + 1 + margin) for c in idx)
+        vol = vol[sl]
+    return downsample(vol, grid)
 
 
 DEFAULT_DATA_ROOT = Path("ehl-paris-medical-image-retrieval")
@@ -62,11 +74,11 @@ def normalized_feature(
     cache_dir: Path, register: bool = True
 ) -> np.ndarray:
     fn = "_rich" if FEAT_FN is rich_feature else ("_slice" if FEAT_FN is sliceview_feature else "")
-    tag = f"g{grid}" + fn + ("" if register else "_noreg")
+    tag = f"g{grid}" + fn + ("" if register else "_noreg") + ("_bbox" if BBOX_CROP else "")
     cache = cache_dir / f"{image_id}_{tag}.npy"
     if cache.exists():
         return np.load(cache)
-    vol = _load_grid(data_root, image_path, grid)
+    vol = _load_grid_maybe_bbox(data_root, image_path, grid)
     feat = FEAT_FN(_register_to_template(vol, template) if register else vol)
     cache_dir.mkdir(parents=True, exist_ok=True)
     np.save(cache, feat)
@@ -193,6 +205,7 @@ def parse_args() -> argparse.Namespace:
                         "copies of dataset1 train (local, no extra data needed).")
     p.add_argument("--assignment", action="store_true")
     p.add_argument("--rerank", choices=["none", "sinkhorn"], default="none")
+    p.add_argument("--bbox-crop", action="store_true", help="Crop to foreground brain bbox before downsample (de-leak FOV).")
     p.add_argument("--rich", action="store_true", help="Use multi-channel rich feature (intensity+edge+half-scale).")
     p.add_argument("--sliceview", action="store_true", help="Use multi-direction slice feature.")
     p.add_argument("--no-register", action="store_true",
@@ -204,11 +217,12 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    global FEAT_FN
+    global FEAT_FN, BBOX_CROP
     if args.rich:
         FEAT_FN = rich_feature
     if args.sliceview:
         FEAT_FN = sliceview_feature
+    BBOX_CROP = args.bbox_crop
     model = build_model(args.data_root, args.grid, args.components, args.alpha,
                         args.fit_pair_csv, args.synth_aug_k)
     rows: list[dict[str, str]] = []
