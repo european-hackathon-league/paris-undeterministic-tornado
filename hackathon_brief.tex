@@ -1,0 +1,597 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\setmainfont{DejaVuSerif.ttf}[Scale=0.92,
+  BoldFont=DejaVuSerif-Bold.ttf, ItalicFont=DejaVuSerif-Italic.ttf,
+  BoldItalicFont=DejaVuSerif-BoldItalic.ttf]
+\setsansfont{DejaVuSans.ttf}[Scale=0.86,
+  BoldFont=DejaVuSans-Bold.ttf, ItalicFont=DejaVuSans-Oblique.ttf,
+  BoldItalicFont=DejaVuSans-BoldOblique.ttf]
+\setmonofont{DejaVuSansMono.ttf}[Scale=0.84, BoldFont=DejaVuSansMono-Bold.ttf]
+
+\usepackage{polyglossia}
+\setdefaultlanguage{russian}
+\setotherlanguage{english}
+
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.0cm,bottom=2.2cm]{geometry}
+\usepackage{xcolor}\usepackage{amsmath}\usepackage{booktabs}
+\usepackage{tabularx}\usepackage{array}\usepackage{graphicx}\usepackage{enumitem}
+\setlist{itemsep=2pt,topsep=3pt,parsep=0pt}
+
+\usepackage{setspace}\setstretch{1.06}
+\setlength{\parskip}{0.35\baselineskip}
+\setlength{\parindent}{0pt}
+\renewcommand{\arraystretch}{1.08}
+
+\definecolor{ink}{HTML}{1A2433}\definecolor{deepblue}{HTML}{14285A}
+\definecolor{midblue}{HTML}{1E3C78}\definecolor{accent}{HTML}{2E6FB7}
+\definecolor{rule}{HTML}{B4C3DC}\color{ink}
+\definecolor{cTheoryBg}{HTML}{E8F0FE}\definecolor{cTheoryFr}{HTML}{4285F4}
+\definecolor{cSysBg}{HTML}{E6F4EA}\definecolor{cSysFr}{HTML}{34A853}
+\definecolor{cTradeBg}{HTML}{FEF7E0}\definecolor{cTradeFr}{HTML}{F9AB00}
+\definecolor{cMathBg}{HTML}{F3E8FD}\definecolor{cMathFr}{HTML}{A142F4}
+\definecolor{cFunBg}{HTML}{E0F7FA}\definecolor{cFunFr}{HTML}{12B5CB}
+\definecolor{cFailBg}{HTML}{FCE8E6}\definecolor{cFailFr}{HTML}{EA4335}
+\definecolor{cProjBg}{HTML}{EFF7E6}\definecolor{cProjFr}{HTML}{7CB342}
+\definecolor{cNoteBg}{HTML}{F1F3F4}\definecolor{cNoteFr}{HTML}{5F6368}
+\definecolor{cCompBg}{HTML}{E8F5E9}\definecolor{cCompFr}{HTML}{2E7D32}
+
+\usepackage[most]{tcolorbox}
+\tcbset{calloutbase/.style={enhanced,breakable,left=3mm,right=3mm,top=2mm,bottom=2mm,
+  boxrule=0pt,leftrule=2.2pt,arc=2pt,outer arc=2pt,fonttitle=\sffamily\bfseries\small,
+  coltitle=ink,attach title to upper,after title={\par\smallskip},boxsep=1.1mm,
+  before skip=6pt,after skip=6pt}}
+\newtcolorbox{theory}[1][Идея]{calloutbase,colback=cTheoryBg,colframe=cTheoryFr,title={#1}}
+\newtcolorbox{system}[1][Как в коде]{calloutbase,colback=cSysBg,colframe=cSysFr,title={#1}}
+\newtcolorbox{tradeoff}[1][Компромисс]{calloutbase,colback=cTradeBg,colframe=cTradeFr,title={#1}}
+\newtcolorbox{mathidea}[1][Математика]{calloutbase,colback=cMathBg,colframe=cMathFr,title={#1}}
+\newtcolorbox{funfact}[1][Заметка]{calloutbase,colback=cFunBg,colframe=cFunFr,title={#1}}
+\newtcolorbox{failure}[1][Где ломается]{calloutbase,colback=cFailBg,colframe=cFailFr,title={#1}}
+\newtcolorbox{project}[1][Действие]{calloutbase,colback=cProjBg,colframe=cProjFr,title={#1}}
+\newtcolorbox{note}[1][Примечание]{calloutbase,colback=cNoteBg,colframe=cNoteFr,title={#1}}
+\newtcolorbox{compression}[1][Запомнить главное]{calloutbase,colback=cCompBg,colframe=cCompFr,title={#1}}
+
+\usepackage{titlesec}
+\titleformat{\section}{\sffamily\Large\bfseries\color{deepblue}}{\thesection}{0.6em}{}[{\color{rule}\titlerule[1pt]}]
+\titleformat{\subsection}{\sffamily\large\bfseries\color{midblue}}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\sffamily\normalsize\bfseries\color{accent}}{}{0em}{}
+\titlespacing*{\section}{0pt}{13pt}{6pt}\titlespacing*{\subsection}{0pt}{9pt}{4pt}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc,backgrounds,fit,matrix,
+  decorations.pathreplacing,decorations.pathmorphing,patterns,chains,scopes}
+\tikzset{>={Stealth[length=2.4mm]},
+  box/.style={draw=midblue,thick,rounded corners=2pt,fill=cTheoryBg,align=center,
+    inner sep=4pt,font=\sffamily\small,minimum height=8mm},
+  greenbox/.style={box,fill=cSysBg,draw=cSysFr!80!black},
+  yellowbox/.style={box,fill=cTradeBg,draw=cTradeFr!80!black},
+  redbox/.style={box,fill=cFailBg,draw=cFailFr!80!black},
+  greybox/.style={box,fill=cNoteBg,draw=cNoteFr},
+  flow/.style={-{Stealth[length=2.2mm]},semithick,midblue},
+  flowd/.style={flow,dashed},
+  lbl/.style={font=\sffamily\scriptsize\itshape,text=ink!75}}
+\newcommand{\figcap}[1]{\par\vspace{0.5mm}{\centering\sffamily\footnotesize\itshape\color{ink!70}#1\par}\vspace{2.5mm}}
+\newcommand{\fitwidth}[1]{\resizebox{\textwidth}{!}{#1}}
+
+\usepackage[bookmarks=true,bookmarksnumbered=true,colorlinks=true,
+  linkcolor=accent,urlcolor=accent,pdftitle={Cross-modal Retrieval — разбор задачи}]{hyperref}
+\setcounter{tocdepth}{2}
+
+\begin{document}\frenchspacing
+
+\begin{titlepage}\centering\vspace*{1.2cm}
+{\sffamily\bfseries\fontsize{26}{30}\selectfont\color{deepblue} Cross-modal Retrieval\\ для 3D МРТ мозга\par}\vspace{4mm}
+{\sffamily\Large\color{midblue} Разбор задачи хакатона, теория и план команды\par}\vspace{8mm}
+\end{titlepage}
+
+\hypersetup{linkcolor=midblue}\tableofcontents\hypersetup{linkcolor=accent}\newpage
+
+\section{Задача в двух словах}
+
+Есть пациенты, у каждого снято два 3D-МРТ одного мозга, но в \emph{разных модальностях}:
+\textbf{T1} с контрастом (ceT1) и \textbf{T2}. Это разные физические протоколы съёмки, поэтому
+одни и те же ткани на них выглядят по-разному (опухоль, ликвор, белое/серое вещество имеют
+разную яркость). Это и есть \emph{modality gap} — разрыв между модальностями.
+
+\textbf{Что нужно сделать (retrieval).} Дан \emph{query} — один объём ceT1. Дана \emph{галерея}
+кандидатов — много объёмов T2. Нужно отранжировать всю галерею так, чтобы T2 того же пациента
+стоял как можно выше (в идеале на 1-м месте). Это не классификация и не сегментация, а
+\emph{поиск по содержимому} (content-based retrieval): «найди ту же голову в другой модальности».
+
+\begin{theory}[Суть]
+Мы учим общее пространство признаков (embedding space), куда T1 и T2 одного пациента попадают
+\emph{рядом}, а разных — \emph{далеко}. Тогда ранжирование = сортировка галереи по близости к query.
+\end{theory}
+
+\begin{center}
+\fitwidth{\begin{tikzpicture}[node distance=6mm]
+  \node[box] (t1) {ceT1\\(query)};
+  \node[greenbox,right=12mm of t1] (eq) {энкодер\\query $f_q$};
+  \node[box,right=14mm of eq] (z) {общее\\пространство};
+  \node[yellowbox,below=10mm of t1] (t2) {T2\\(галерея)};
+  \node[greenbox,right=12mm of t2] (et) {энкодер\\target $f_t$};
+  \draw[flow] (t1)--(eq); \draw[flow] (eq)--(z);
+  \draw[flow] (t2)--(et); \draw[flow] (et) to[bend right=12] (z);
+  \node[redbox,right=16mm of z] (rank) {ранжирование\\по косинусу};
+  \draw[flow] (z)--(rank);
+\end{tikzpicture}}
+\figcap{Рис. 1 — Два энкодера → одно пространство → сортировка галереи по близости.}
+\end{center}
+
+\subsection{Три уровня сложности (3 датасета)}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l l X@{}}\toprule
+\textbf{Датасет} & \textbf{Что это} & \textbf{В чём подвох}\\\midrule
+1 (Level 1) & идеально совмещены & T1 и T2 на одной сетке (registered). Есть \textbf{350 размеченных пар} для обучения. Самый лёгкий.\\
+2 (Level 2) & нелинейные деформации & к каждому объёму \emph{независимо} применены случайный поворот/сдвиг и нелинейная деформация. Геометрия больше не общая. Обучающих пар \textbf{нет}.\\
+3 (Level 3) & до/после операции & таргеты — интраоперационные снимки, \emph{другая больница}. Ткань сдвинута, часть мозга удалена, локально всё иначе. Пар \textbf{нет}. Самый тяжёлый.\\
+\bottomrule\end{tabularx}\end{center}
+
+\begin{note}[Данные]
+350 пар (только датасет 1) для обучения. Валидация/тест: 1/2/3 = 40/40/20 (val) и 100/100/77
+(test) query на свою галерею. Ранжировать query можно \emph{только} против галереи своего
+датасета и сплита.
+\end{note}
+
+\subsection{Как считается результат: метрика MRR}
+
+Метрика — \textbf{MRR} (Mean Reciprocal Rank, средний обратный ранг). Для каждого query берём
+позицию правильного таргета в нашем ранжировании и считаем $1/\text{rank}$: правильный на 1-м
+месте $\to 1.0$; на 2-м $\to 0.5$; на 10-м $\to 0.1$. Затем усредняем по запросам внутри датасета,
+а потом — по трём датасетам.
+
+\begin{mathidea}[Формула итогового скора]
+\[
+\mathrm{MRR}_d=\frac{1}{|Q_d|}\sum_{i\in Q_d}\frac{1}{\mathrm{rank}_i},
+\qquad
+\text{score}=\frac{\mathrm{MRR}_1+\mathrm{MRR}_2+\mathrm{MRR}_3}{3}.
+\]
+Усреднение по датасетам \emph{макро} — каждый датасет весит одинаково, хотя в нём разное число
+запросов. Значит, прогресс на тяжёлых датасетах 2 и 3 ценится так же, как на лёгком 1.
+\end{mathidea}
+
+\begin{tradeoff}[Практика Kaggle]
+Лимит — \textbf{100 сабмитов в день на команду}. Val-строки идут в публичный лидерборд,
+test-строки — в приватный (финал). Нельзя жечь сабмиты на перебор: нужна \emph{локальная}
+валидация (см. §\ref{sec:valid}).
+\end{tradeoff}
+
+\section{Челлендж 1: модель baseline (SliceCLIP)}
+
+В репозитории лежит простой baseline \texttt{slice\_clip\_baseline.py}. Это \emph{дуальный энкодер
+в стиле CLIP}. Разберём по шагам — это и есть «моделька с hidden space».
+
+\subsection{Что происходит с картинкой}
+
+\begin{enumerate}
+\item \textbf{Препроцессинг (MONAI).} Объём приводится к ориентации RAS, спейсингу $1{\times}1{\times}1$ мм,
+яркость масштабируется в $[0,1]$.
+\item \textbf{Срезы вместо 3D.} Из объёма берут \emph{3 осевых среза} на 35/50/65\% занятой
+по высоте области и складывают как 3-канальную картинку $96{\times}96$. То есть 3D упрощают до «почти 2D».
+\item \textbf{Энкодер.} Маленькая 2D-CNN (3 свёртки + пулинг) → линейный проектор →
+вектор размерности \textbf{128}. Это и есть hidden space / embedding.
+\item \textbf{Нормировка.} Вектор нормируют на единичную длину (L2), поэтому скалярное
+произведение двух векторов = \textbf{косинусная близость}.
+\end{enumerate}
+
+\begin{note}[Про «2D»]
+hidden space здесь \emph{не} 2-мерный, а 128-мерный. «2D» — это либо про срезы (2D вместо 3D),
+либо про визуализацию эмбеддингов в 2D (UMAP/t-SNE) для отладки. Размерность пространства —
+гиперпараметр (\texttt{embedding\_dim}).
+\end{note}
+
+\subsection{Два энкодера, одно пространство}
+
+Ключевой момент: \textbf{два разных энкодера} — $f_q$ для query (ceT1) и $f_t$ для target (T2).
+Почему два, а не один? Потому что модальности выглядят по-разному; каждый энкодер учится своему
+«языку», но оба отображают в \emph{одно общее} пространство, где пары должны совпасть. Это и есть
+cross-modal alignment — сшивание modality gap.
+
+\begin{center}
+\fitwidth{\begin{tikzpicture}[cell/.style={box,minimum size=9mm,font=\sffamily\scriptsize}]
+  \foreach \r in {1,2,3}{
+    \foreach \c in {1,2,3}{
+      \pgfmathtruncatemacro{\d}{ifthenelse(\r==\c,1,0)}
+      \node[cell,fill={\ifnum\d=1 cSysBg\else white\fi},
+            draw={\ifnum\d=1 cSysFr!80!black\else midblue\fi}]
+            at (\c*1.0, -\r*1.0) {$s_{\r\c}$};
+    }
+  }
+  \node[lbl,align=center] at (-0.1,-1) {T1$_1$};
+  \node[lbl,align=center] at (-0.1,-2) {T1$_2$};
+  \node[lbl,align=center] at (-0.1,-3) {T1$_3$};
+  \node[lbl,align=center] at (1,0.0) {T2$_1$};
+  \node[lbl,align=center] at (2,0.0) {T2$_2$};
+  \node[lbl,align=center] at (3,0.0) {T2$_3$};
+  \node[align=left,font=\sffamily\small,anchor=west] at (4.0,-2) {
+    Матрица близостей $N{\times}N$ в батче.\\[2pt]
+    \textcolor{cSysFr!60!black}{\textbf{Диагональ}} = верные пары (хотим максимум).\\
+    Остальное = чужие (in-batch negatives).\\
+    Лосс тянет диагональ вверх, остальное вниз.};
+\end{tikzpicture}}
+\figcap{Рис. 2 — CLIP-лосс: софтмакс по строкам и по столбцам, метка = диагональ.}
+\end{center}
+
+\subsection{Как именно тренируется (лосс)}
+
+Берём батч из $N$ верных пар. Считаем все попарные близости $s_{ij}=\tau\,\langle z^q_i, z^t_j\rangle$
+(матрица $N\times N$). Правильные ответы — на диагонали. Применяем \textbf{кросс-энтропию} как в
+классификации: для строки $i$ «правильный класс» — столбец $i$. Симметрично делаем то же по
+столбцам. Это \textbf{InfoNCE} / контрастивный лосс CLIP.
+
+\begin{mathidea}[InfoNCE (симметричный)]
+\[
+\mathcal{L}=\tfrac12\Big[\underbrace{-\tfrac1N\sum_i\log\tfrac{e^{s_{ii}}}{\sum_j e^{s_{ij}}}}_{\text{query}\to\text{target}}
++\underbrace{-\tfrac1N\sum_j\log\tfrac{e^{s_{jj}}}{\sum_i e^{s_{ij}}}}_{\text{target}\to\text{query}}\Big].
+\]
+$\tau$ — температура / scale (в коде \texttt{similarity\_scale}=5). Чем больше, тем «резче»
+распределение. «Негативы» берутся \emph{бесплатно} из батча — остальные пары в нём.
+\end{mathidea}
+
+\begin{system}[Цикл обучения в коде]
+\texttt{AdamW}, lr $10^{-3}$, batch 128, 500 эпох, лёгкая аугментация (гауссов шум).
+Инференс: один раз прогнать энкодеры по всем query и таргетам, сохранить эмбеддинги,
+для каждого query отсортировать таргеты по косинусу — это и есть сабмит.
+\end{system}
+
+\begin{failure}[Почему baseline слабый]
+Только 3 среза (теряем 3D), крошечная CNN, обучение с нуля на 350 парах (мало), и
+\emph{ноль инвариантности} к деформациям → на датасетах 2 и 3 почти не работает.
+Это отправная точка, а не решение.
+\end{failure}
+
+\section{Какие метрики и лоссы брать}
+
+Важно различать \textbf{три разные «метрики»}, их часто путают:
+
+\begin{enumerate}
+\item \textbf{Метрика близости} (на инференсе) — как сравнить два эмбеддинга. Обычно
+\emph{косинус} (после L2-нормировки) или евклидово расстояние. Косинус устойчив к масштабу — берите его.
+\item \textbf{Лосс обучения} — что оптимизируем. Здесь есть выбор (ниже).
+\item \textbf{Метрика качества} — MRR (задаётся организаторами, мы её не выбираем, но можем
+считать локально).
+\end{enumerate}
+
+\subsection{Семейства лоссов (что выбрать для обучения)}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X l@{}}\toprule
+\textbf{Лосс} & \textbf{Идея} & \textbf{Когда}\\\midrule
+InfoNCE / CLIP & софтмакс по матрице близостей, in-batch негативы & базовый выбор, нужен большой батч\\
+Triplet / margin & якорь ближе к позитиву, чем к негативу, на зазор $m$ & когда мало данных, нужен hard-negative mining\\
+Barlow Twins & кросс-корреляция признаков $\to$ единичная матрица & борьба с коллапсом, без негативов\\
+VICReg & variance + invariance + covariance члены & то же, явно держит дисперсию\\
+\bottomrule\end{tabularx}\end{center}
+
+\subsection{Про «матрицу ковариаций vs единичную»}
+
+Ты имел в виду \textbf{Barlow Twins / VICReg}. Это альтернатива контрастиву \emph{без явных
+негативов}. Берём эмбеддинги двух «видов» (тут — T1 и T2 одной пары), \emph{нормируем по батчу}
+и считаем кросс-корреляционную матрицу $C$ между измерениями. Хотим, чтобы $C$ стала
+\textbf{единичной}: диагональ $\to 1$ (соответствующие измерения T1 и T2 совпадают —
+\emph{инвариантность}), вне диагонали $\to 0$ (измерения не дублируют друг друга —
+\emph{декорреляция}, защита от коллапса в одну точку).
+
+\begin{mathidea}[Barlow Twins]
+\[
+\mathcal{L}=\sum_i (1-C_{ii})^2 \;+\; \lambda \sum_{i\neq j} C_{ij}^2,
+\qquad
+C_{ij}=\frac{\sum_b z^{A}_{b,i}\,z^{B}_{b,j}}{\sqrt{\sum_b (z^A_{b,i})^2}\sqrt{\sum_b (z^B_{b,j})^2}}.
+\]
+Первый член тянет $C$ к диагонали (выравнивание пар), второй — обнуляет недиагональ
+($\|C-I\|^2$). VICReg делает похожее, но отдельным членом штрафует низкую дисперсию признаков.
+\end{mathidea}
+
+\begin{tradeoff}[InfoNCE vs Barlow]
+InfoNCE прост и силён, но \emph{любит большой батч} (много негативов) — у нас всего 350 пар,
+батч ограничен. Barlow/VICReg \emph{не нужны негативы} и они устойчивее на малых данных и к
+коллапсу. \textbf{Можно комбинировать}: $\mathcal{L}=\mathcal{L}_{\text{InfoNCE}}+\beta\,\mathcal{L}_{\text{Barlow}}$ —
+часто помогает. Это и есть «комбинирование путей».
+\end{tradeoff}
+
+\begin{failure}[Коллапс представлений]
+Главная беда self-supervised: модель отображает всё в одну точку — лосс маленький, толку ноль.
+Косинус у всех $\approx 1$, ранжирование случайное. Недиагональный член Barlow / дисперсионный
+член VICReg именно от этого и защищают. Признак коллапса — почти одинаковые эмбеддинги.
+\end{failure}
+
+\section{Минимальная теория (чтобы всё понимать)}
+
+\begin{itemize}
+\item \textbf{Representation learning.} Учим функцию-энкодер, превращающую картинку в вектор так,
+чтобы геометрия векторов отражала смысл («та же голова» $\to$ рядом).
+\item \textbf{Контрастивное обучение.} Тянем позитивы ближе, негативы дальше. Сила — в негативах:
+чем больше и «злее» (hard negatives), тем лучше пространство.
+\item \textbf{Modality gap.} T1 и T2 — разные распределения яркостей. Два энкодера или общий
+энкодер с модальным токеном/нормировкой сшивают их в одно пространство.
+\item \textbf{Инвариантность через аугментацию.} Если хотим, чтобы модель не зависела от
+поворота/деформации, надо \emph{показать} ей такие искажения при обучении. Модель становится
+инвариантной ровно к тем преобразованиям, которыми мы её «трясли».
+\item \textbf{Domain shift / генерализация.} Датасеты 2 и 3 — другое распределение (деформации,
+другая больница, послеоперационные изменения). Качество падает, если обучались только на «чистом»
+датасете 1. Лечится аугментацией, доменно-устойчивыми признаками, self-supervised дообучением.
+\end{itemize}
+
+\section{Челленджи 2 и 3: пути решения}
+
+Главная проблема: \textbf{нет размеченных пар}, есть геометрические (2) и структурные (3)
+искажения и доменный сдвиг. Обучаемся всё равно на датасете 1, а робастность добываем иначе.
+
+\subsection{Путь A — расширение датасета (синтетические искажения)}
+
+Самый прямой путь, который ты назвал. Берём пары датасета 1 и при обучении \emph{независимо}
+деформируем query и target — имитируем датасет 2.
+
+\begin{system}[MONAI-аугментации]
+\texttt{RandAffined} (поворот/сдвиг/масштаб), \texttt{Rand3DElasticd} (нелинейная упругая
+деформация), \texttt{RandBiasFieldd} (неоднородность поля — «другой сканер»),
+\texttt{RandGaussianNoised}, \texttt{RandAdjustContrastd}/гамма, случайные кропы. Применять к
+query и target \emph{раздельно}, чтобы модель не опиралась на общую геометрию.
+\end{system}
+
+\begin{compression}[Ключ к датасету 2]
+Хочешь инвариантность к деформации — \textbf{генерируй её при обучении}. Сильная эластическая +
+аффинная аугментация на датасете 1 обычно даёт основной прирост MRR на датасете 2.
+\end{compression}
+
+\subsection{Путь B — сильный/предобученный энкодер}
+
+Заменить крошечную CNN на 3D-энкодер или предобученный медицинский бэкбон: 3D ResNet,
+\emph{nnU-Net}-признаки, модели из MONAI Bundle, SAM-Med3D, BiomedCLIP (для срезов). Предобучение
+на больших медданных даёт признаки, устойчивые к домену, — помогает датасетам 2 и 3.
+
+\subsection{Путь C — доменно-устойчивые / анатомические признаки}
+
+Для датасета 3 (ткань сдвинута, часть удалена) полезны признаки, которые \emph{не меняются}:
+общая форма мозга, желудочки, череп, крупные борозды — «биометрия мозга». Сюда же
+\emph{radiomics} (форма, текстуры) и совмещение (registration) как препроцессинг. Это устойчивее
+к локальным изменениям, чем поверхностная текстура.
+
+\subsection{Путь D — self-supervised на неразмеченных данных}
+
+Val/test изображения нам доступны (скрыты только метки). На них можно делать
+\emph{self-supervised} предобучение (SimCLR/Barlow/MAE) или \emph{test-time adaptation}: подгонять
+статистики BatchNorm/нормировки под домен теста. Помогает закрыть доменный сдвиг без меток.
+
+\subsection{Путь E — re-ranking и ансамбли}
+
+После первичного ранжирования улучшаем порядок: \emph{k-reciprocal nearest neighbors},
+query expansion. И \textbf{комбинируем} несколько источников близости (разные энкодеры/срезы/
+признаки) усреднением скорингов — ансамбль почти всегда даёт +.
+
+\begin{center}
+\fitwidth{\begin{tikzpicture}[n/.style={box,minimum width=26mm,align=center,font=\sffamily\scriptsize}]
+  \node[greenbox,n] (a) {A: аугментации\\(элас.+аффин.)};
+  \node[n,right=5mm of a] (b) {B: сильный\\бэкбон};
+  \node[n,right=5mm of b] (c) {C: анатом.\\признаки};
+  \node[yellowbox,n,right=5mm of c] (d) {D: self-sup\\на тесте};
+  \node[redbox,n,right=5mm of d] (e) {E: re-rank\\+ ансамбль};
+  \node[lbl,below=4mm of a,align=center] {датасет 2};
+  \node[lbl,below=4mm of c,align=center] {датасет 3};
+  \node[lbl,below=4mm of e,align=center] {везде};
+  \draw[flowd] (a)--(b);\draw[flowd] (b)--(c);\draw[flowd] (c)--(d);\draw[flowd] (d)--(e);
+\end{tikzpicture}}
+\figcap{Рис. 3 — Пути можно складывать: аугментации + бэкбон + признаки + адаптация + ансамбль.}
+\end{center}
+
+\begin{tradeoff}[Что комбинировать в первую очередь]
+A (аугментации) + B (бэкбон) дают наибольший прирост за наименьшие усилия. C и D — для датасета 3
+и доменного сдвига. E (re-rank/ансамбль) — дешёвый финальный буст перед сабмитом.
+\end{tradeoff}
+
+\section{Локальная валидация (не жечь сабмиты)}\label{sec:valid}
+
+С лимитом 100 сабмитов/день нельзя «пробовать наугад». Нужна \textbf{офлайн-оценка MRR}.
+
+\begin{project}[Что построить в первый час]
+Из 350 пар датасета 1 отложить \emph{hold-out} (например 50 пар) как мини-галерею с известными
+ответами и считать MRR локально. Для имитации датасетов 2 и 3 — применять к hold-out те же
+эластические/аффинные деформации. Тогда любой эксперимент проверяется \emph{без} Kaggle, а
+сабмиты тратятся только на финальную проверку гипотез.
+\end{project}
+
+\begin{note}[Дисциплина экспериментов]
+Один скрипт: «модель $\to$ эмбеддинги $\to$ MRR на hold-out». Логировать конфиг и число. Менять
+одну вещь за раз (аугментация / лосс / бэкбон) и сравнивать MRR. Это важнее, чем сложная модель.
+\end{note}
+
+\section{Распределение ролей в команде}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}\toprule
+\textbf{Роль} & \textbf{Зона ответственности}\\\midrule
+\textbf{Архитектура (ML)} & энкодеры (2D срезы vs 3D), один/два энкодера, выбор бэкбона (путь B), голова проекции. Владелец модели.\\
+\textbf{Данные/аугментации} & MONAI-пайплайн, кэш, синтетические деформации (путь A), имитация датасетов 2/3 для валидации. Главный по датасетам 2 и 3.\\
+\textbf{Метрики/обучение} & лосс (InfoNCE/Barlow/комбо), температура, локальный MRR-харнесс (§\ref{sec:valid}), аблейшены, выбор сабмита. Решает «что выбрать».\\
+\textbf{Инфра/сервер} & GPU-сервер, окружение (\texttt{uv}), запуск длинных тренировок, кэш, трекинг экспериментов, сборка сабмита.\\
+\textbf{Веб/визуализация} & дашборд: query $\to$ топ-K таргетов (срезы рядом), 2D-проекция эмбеддингов (UMAP) для отладки коллапса/кластеров, табло прогресса MRR.\\
+\bottomrule\end{tabularx}\end{center}
+
+\begin{note}[Как лечь на вашу команду]
+«Серверный» человек $\to$ Инфра/сервер. «Веб» $\to$ Веб/визуализация (очень полезно: видеть, что
+модель реально путает). «Про архитектуру» $\to$ Архитектура. «Про метрику» $\to$ Метрики/обучение.
+Данные/аугментации критичны для датасетов 2/3 — отдайте сильнейшему или поделите с архитектором.
+\end{note}
+
+\section{План на хакатон (приоритеты)}
+
+\begin{enumerate}
+\item \textbf{Запустить baseline} и получить первый MRR на лидерборде — точка отсчёта.
+\item \textbf{Локальный MRR-харнесс} на hold-out (§\ref{sec:valid}) — без него вы слепые.
+\item \textbf{Аугментации (путь A)} — главный рычаг для датасета 2. Сильные эластик+аффин.
+\item \textbf{Сильнее энкодер (путь B)} — 3D или предобученный бэкбон.
+\item \textbf{Лосс} — добавить Barlow к InfoNCE, подобрать температуру.
+\item \textbf{Датасет 3} — анатомические/robust-признаки (путь C), self-sup на тесте (путь D).
+\item \textbf{Финальный буст} — re-ranking + ансамбль (путь E) перед сабмитом.
+\end{enumerate}
+
+\begin{compression}[Если запомнить только это]
+(1) Задача = выучить общее пространство, где T1 и T2 одного пациента рядом; ранг по косинусу.
+(2) Челлендж 1 = CLIP-дуальный энкодер + InfoNCE; «ковариация vs $I$» = Barlow/VICReg, их можно
+сложить с InfoNCE. (3) Датасеты 2/3 = генерализация: аугментации + сильный бэкбон + robust-признаки.
+(4) Без локального MRR на hold-out нельзя итеративно улучшаться.
+\end{compression}
+
+\clearpage
+\section{Датасет 3: что конкретно делать с robust-признаками}
+
+Тезис «нужны устойчивые признаки» бесполезен без действий. Вот что реально сделать.
+
+\subsection{Шаг 1 — регистрация как препроцессинг (самый дешёвый выигрыш)}
+
+Главная боль датасетов 2 и 3 — разная геометрия. Лечится \emph{до} модели: каждый объём
+аффинно совместить с общим шаблоном (например MNI-атлас) или query с галереей. Тогда все головы
+оказываются в одной системе координат, и даже baseline сразу работает лучше.
+
+\begin{project}[Действие]
+Взять \texttt{ANTs}/\texttt{SimpleITK}/\texttt{MONAI} и аффинно регистрировать все объёмы к
+одному шаблону перед извлечением срезов. Это один пасс препроцессинга, не трогает модель.
+Для датасета 3 регистрация грубая (ткань удалена), но глобально выравнивает череп и срединные структуры.
+\end{project}
+
+\subsection{Шаг 2 — классические признаки + ансамбль}
+
+Помимо выученного эмбеддинга считаем \emph{ручной} вектор признаков, устойчивый к локальным
+изменениям, и \textbf{добавляем} его как второй источник близости (ансамбль скорингов).
+
+\begin{itemize}
+\item \textbf{Форма/биометрия:} объём мозга, площадь поверхности, сферичность, размер желудочков,
+толщина черепа, положение срединной линии. Это «отпечаток головы», почти не меняющийся после операции.
+\item \textbf{Radiomics} (\texttt{pyradiomics}): shape-, first-order- и текстурные (GLCM/GLRLM)
+признаки. Считаются по маске мозга, дают сотни чисел $\to$ нормировать $\to$ косинус.
+\item \textbf{Маска мозга / skull-strip} (HD-BET, MONAI) как опора: считать признаки только по мозгу.
+\end{itemize}
+
+\begin{center}
+\fitwidth{\begin{tikzpicture}[n/.style={box,align=center,font=\sffamily\scriptsize,minimum width=22mm}]
+  \node[n] (v) {объём};
+  \node[greenbox,n,right=5mm of v] (r) {регистрация\\+ маска мозга};
+  \node[n,right=6mm of r] (e) {learned\\эмбеддинг};
+  \node[yellowbox,n,above right=2mm and 6mm of r] (rad) {radiomics /\\форма};
+  \node[redbox,n,right=24mm of e] (s) {сумма\\близостей};
+  \draw[flow] (v)--(r);
+  \draw[flow] (r)--(e); \draw[flow] (r) to[bend left=10] (rad);
+  \draw[flow] (e)--(s); \draw[flow] (rad) to[bend left=8] (s);
+\end{tikzpicture}}
+\figcap{Рис. 4 — Регистрация $\to$ маска $\to$ (нейросеть $\oplus$ radiomics) $\to$ ансамбль близостей.}
+\end{center}
+
+\begin{tradeoff}[Когда это окупается]
+Для датасета 3 (резекция, сдвиг) глобальная форма/биометрия может бить «глубокую» текстуру.
+Минимум усилий: регистрация всем + ансамбль из нейросети и radiomics. Не пытайтесь сделать
+идеально — даже грубое выравнивание и пара shape-признаков дают прирост.
+\end{tradeoff}
+
+\section{Где находится CNN и как её заменить}
+
+\subsection{Где она в коде}
+
+В \texttt{slice\_clip\_baseline.py} CNN — это класс \texttt{TinySliceEncoder} (стр.~132--159):
+свёртки в \texttt{self.features}, затем \texttt{self.projection} в вектор размерности
+\texttt{embedding\_dim}. Класс \texttt{SliceCLIP} (стр.~162--184) создаёт \emph{два} таких энкодера
+(\texttt{query\_encoder}, \texttt{target\_encoder}) и нормирует выход в \texttt{encode\_query/target}.
+
+\begin{theory}[Контракт энкодера]
+Энкодер — это любой \texttt{nn.Module}, который из входа делает вектор длины
+\texttt{embedding\_dim}. Нормировку и косинус делает \texttt{SliceCLIP}. Значит заменить CNN =
+подставить другой модуль с тем же выходом. Менять лосс/инференс не нужно.
+\end{theory}
+
+\subsection{Вариант 1 — предобученный 2D-бэкбон (минимум правок)}
+
+Срезы уже дают 3-канальную картинку $96{\times}96$ — это ровно вход ResNet. Меняем только класс энкодера:
+
+\begin{verbatim}
+import torchvision
+class BackboneEncoder(nn.Module):
+    def __init__(self, embedding_dim):
+        super().__init__()
+        net = torchvision.models.resnet18(weights="IMAGENET1K_V1")
+        net.fc = nn.Linear(net.fc.in_features, embedding_dim)
+        self.net = net                # input: (B, 3, 96, 96) = наши 3 среза
+    def forward(self, x):
+        return self.net(x)
+\end{verbatim}
+
+И в \texttt{SliceCLIP.\_\_init\_\_} заменить \texttt{TinySliceEncoder(embedding\_dim)} на
+\texttt{BackboneEncoder(embedding\_dim)}. Всё остальное (лосс, инференс, сабмит) без изменений.
+
+\subsection{Вариант 2 — полноценный 3D-энкодер}
+
+Тут надо менять \emph{и данные}: вместо \texttt{SliceStackd} (стр.~93--129) возвращать весь объём,
+ресэмплированный к фиксированному размеру (напр. $96^3$, 1 канал). Затем 3D-сеть из MONAI:
+
+\begin{verbatim}
+from monai.networks.nets import resnet10
+enc = resnet10(spatial_dims=3, n_input_channels=1, num_classes=embedding_dim)
+\end{verbatim}
+
+Можно взять предобученные веса (MedicalNet) или image-энкодер SAM-Med3D. Цена: больше памяти и
+времени, переписать трансформ срезов на \texttt{Resized}/кроп объёма.
+
+\begin{tradeoff}[Что выбрать]
+Начните с \textbf{Варианта 1}: 10 строк, использует ImageNet-признаки, быстро проверяется на
+локальном MRR. 3D (Вариант 2) — следующий шаг, если 2D упёрся: он видит всю анатомию, важную для
+датасета 3, но дороже и требует переделки пайплайна данных.
+\end{tradeoff}
+
+\section{Аугментации: разбор и рекомендация}
+
+\textbf{Принцип:} модель становится инвариантной ровно к тем искажениям, которые мы ей показали.
+Значит аугментации датасета 1 должны \emph{имитировать} то, чем датасеты 2 и 3 отличаются:
+геометрию (2), сканер/контраст и резекцию (3). И применять их к query и target \textbf{независимо}.
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X l l@{}}\toprule
+\textbf{Аугментация} & \textbf{Что имитирует} & \textbf{Датасет} & \textbf{Риск}\\\midrule
+RandAffine (поворот/сдвиг/масштаб) & жёсткие сдвиги & 2, 3 & низкий\\
+Rand3DElastic & нелинейные деформации & 2 & средний (медленно)\\
+RandBiasField & неоднородность сканера & 3 & низкий\\
+RandAdjustContrast / гамма & другой протокол/контраст & 3 & низкий\\
+RandGaussian/GibbsNoise & шум съёмки & 2, 3 & низкий\\
+RandScale/ShiftIntensity & другая яркость & 3 & низкий\\
+RandSpatialCrop / изменение FOV & разный размер/обрезка & 2, 3 & средний\\
+Coarse dropout (3D «дырки») & резекция ткани & 3 & высокий (спекулятивно)\\
+RandFlip (L/R) & --- & --- & опасно (теряет латеральность)\\
+\bottomrule\end{tabularx}\end{center}
+
+\begin{note}[Мысли вслух]
+Геометрия (affine+elastic) — главный рычаг для датасета 2. Интенсивностные (bias field, гамма,
+шум) дёшевы и закрывают доменный сдвиг датасета 3. Coarse dropout — единственное, что напрямую
+моделирует удалённую ткань, но легко переборщить. Флип меняет лево/право — для одного пациента
+латеральность опухоли информативна, инвариантность к флипу может стереть полезный признак.
+\end{note}
+
+\begin{tradeoff}[Сила vs данные]
+Пар всего 350. Слишком агрессивная аугментация ломает сходимость. Поднимайте силу постепенно и
+сверяйтесь с локальным MRR — augmentation, ухудшающая hold-out, не нужна.
+\end{tradeoff}
+
+\begin{compression}[Вывод: рекомендуемый рецепт]
+\textbf{Всегда:} RandAffine ($\pm$15--20$^\circ$, сдвиг $\pm$10\%, масштаб $\pm$10\%) +
+интенсивностные (RandBiasField, гамма, шум, scale/shift). \textbf{Сильно:} Rand3DElastic
+(умеренные коэффициенты) — ради датасета 2. \textbf{Лёгкий} coarse dropout — намёк на резекцию
+(датасет 3). \textbf{Применять query и target раздельно.} \textbf{Флип — пропустить} (или включить
+только если локальный MRR подтвердит пользу). Наращивать силу под контролем hold-out MRR.
+\end{compression}
+
+\section{Глоссарий}
+\begin{center}\small
+\begin{tabularx}{\linewidth}{@{}l X@{}}\toprule
+\textbf{Термин} & \textbf{Значение}\\\midrule
+ceT1 / T1 & T1-взвешенная МРТ с контрастом (query-модальность)\\
+T2 & T2-взвешенная МРТ (target-модальность)\\
+Retrieval & поиск/ранжирование кандидатов по близости к запросу\\
+Embedding & вектор-представление картинки в скрытом пространстве\\
+Modality gap & различие между T1 и T2 как распределениями\\
+InfoNCE / CLIP & контрастивный лосс с in-batch негативами\\
+Barlow Twins & лосс: кросс-корреляция признаков $\to$ единичная матрица\\
+VICReg & variance--invariance--covariance лосс (без негативов)\\
+MRR & Mean Reciprocal Rank, $\frac1{|Q|}\sum 1/\text{rank}$\\
+Domain shift & расхождение распределений train и test (датасеты 2/3)\\
+MONAI & библиотека для медицинского 3D deep learning\\
+\bottomrule\end{tabularx}\end{center}
+
+\end{document}

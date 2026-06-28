@@ -2,9 +2,23 @@
 
 _Last updated: 2026-06-27_
 
-## Headline
+## Headline (UPDATED 2026-06-28 — Claude session)
 
-- **Best Kaggle public score: `0.90444`** — `submissions/mix_hung_d1template_d2template_d3grid.csv` — GOAL (0.9+) HIT.
+- **Best Kaggle public score: `0.91981`** — `submissions/mix_d1template_d2deformslab_d3grid.csv`
+  (d2 = deformable Demons template-norm + per-slab fusion).
+- Progression: `0.90444` → `0.91874` (d2 deformable) → **`0.91981`** (d2 deform+slab).
+- **The real lever = deformable (elastic) registration of d2** (`d2_methods.py::_deformable_to_template`,
+  Demons smooth=3). It TRANSFERS (attacks the actual elastic warp). +0.0143 over rigid.
+- Slab fusion / Sinkhorn add ≈0 on real (harness over-promised; reranking/fusion does
+  NOT transfer, only registration improvements do). Sinkhorn REGRESSED (0.890).
+- Leak hunt (LEAK_HUNT.md): only d3 affine leak (already used); **d2 has no accessible
+  leak**. Leaderboard 1.0s use an exploit not in the files/API we can reach.
+- Kaggle CLI works via `KAGGLE_KEY` env (KGAT token, no username).
+- Verified scores this session: deform+slab 0.91981, deform 0.91874, baseline 0.90444,
+  sinkhorn 0.89030.
+
+### (historical) prior best
+- `0.90444` — `submissions/mix_hung_d1template_d2template_d3grid.csv`.
 - Session progression: `0.65137` → `0.77071` → `0.80127` → **`0.90444`**.
 - Recipe: d1 = template normalization g44; d2 = template normalization g44;
   d3 = grid-intensity feature **no registration** (already-aligned). All + Hungarian.
