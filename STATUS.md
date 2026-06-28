@@ -1,285 +1,287 @@
 # STATUS
 
-_Last updated: 2026-06-27_
+_Последнее обновление: 2026-06-27_
 
-## Headline
+## Главное
 
-- **Best Kaggle public score: `0.90444`** — `submissions/mix_hung_d1template_d2template_d3grid.csv` — GOAL (0.9+) HIT.
-- Session progression: `0.65137` → `0.77071` → `0.80127` → **`0.90444`**.
-- Recipe: d1 = template normalization g44; d2 = template normalization g44;
-  d3 = grid-intensity feature **no registration** (already-aligned). All + Hungarian.
-- All wins are CLASSICAL, augmentation-free (only original 350 d1 pairs).
+- **Лучший публичный счёт на Kaggle: `0.90444`** — `submissions/mix_hung_d1template_d2template_d3grid.csv` — ЦЕЛЬ (0.9+) ДОСТИГНУТА.
+- Прогресс за сессию: `0.65137` → `0.77071` → `0.80127` → **`0.90444`**.
+- Рецепт: d1 = template normalization g44; d2 = template normalization g44;
+  d3 = grid-intensity feature **без регистрации** (уже выровнено). Всё + Hungarian.
+- Все улучшения КЛАССИЧЕСКИЕ, без аугментации (только исходные 350 пар d1).
 
-## Per-dataset MRR (current best mix)
+## MRR по датасетам (текущий лучший микс)
 
-| dataset | method | approx MRR | status |
+| dataset | метод | примерный MRR | статус |
 |---|---|---|---|
-| dataset1 | template normalization g44 + Hungarian | ~0.964 | near ceiling |
-| dataset2 | template normalization g44 + Hungarian | ~0.749 | **now weakest** |
-| dataset3 | grid feature no-register g44 + Hungarian | ~1.000 | solved |
+| dataset1 | template normalization g44 + Hungarian | ~0.964 | близко к потолку |
+| dataset2 | template normalization g44 + Hungarian | ~0.749 | **теперь самый слабый** |
+| dataset3 | grid feature no-register g44 + Hungarian | ~1.000 | решён |
 
-Overall = (0.964 + 0.749 + 1.000) / 3 ≈ 0.904.
+Итого = (0.964 + 0.749 + 1.000) / 3 ≈ 0.904.
 
-Two feature modes in `d2_template_retrieval.py`:
-- default = register to same-modality template (for pose-shifted sets d1, d2).
-- `--no-register` = raw downsampled grid feature (for already-aligned d3).
-Both feed the d1-trained PCA/Ridge map + Hungarian. The grid-intensity feature is
-far stronger than the old classical handcrafted features (drove d1 0.877->0.964
-and d3 0.690->~1.0).
+Два режима признаков в `d2_template_retrieval.py`:
+- по умолчанию = регистрация к шаблону той же модальности (для наборов со сдвигом позы d1, d2).
+- `--no-register` = сырой даунсэмпленный grid feature (для уже выровненного d3).
+Оба подаются в обученный на d1 PCA/Ridge-маппинг + Hungarian. Grid-intensity feature
+намного сильнее старых классических hand-crafted признаков (поднял d1 0.877->0.964
+и d3 0.690->~1.0).
 
-KEY: template normalization (register each volume to same-modality d1 mean
-template) helps registered/deformed sets (d1, d2) but BREAKS d3 — d3 targets are
-intraop, already in query space, so registering to a preop template misaligns
-surgical changes (d3 MRR 0.690 -> 0.251 with template). Verified on Kaggle.
+КЛЮЧЕВОЕ: template normalization (регистрация каждого volume к среднему d1-шаблону
+той же модальности) помогает зарегистрированным/деформированным наборам (d1, d2), но
+ЛОМАЕТ d3 — target в d3 интраоперационные, уже в пространстве запроса, поэтому
+регистрация к предоперационному шаблону смещает хирургические изменения
+(d3 MRR 0.690 -> 0.251 с шаблоном). Проверено на Kaggle.
 
-## What changed this session
+## Что изменилось за эту сессию
 
-1. Built `synthetic_d2_eval.py` + `d2_methods.py`: local synthetic-d2 validator.
-   Applies independent rigid+elastic warps to labelled d1 pairs to mimic d2 and
-   scores methods offline (Hungarian-recovery MRR). Calibrated so canonical ≈ 0.26
-   matches real d2. **Use before spending Kaggle submissions.**
-2. Discovered template normalization (synthetic 0.55 vs canonical 0.26). Built
-   `d2_template_retrieval.py` (caches `.d2cache/`).
-3. Verified on Kaggle: d2 partial 0.24963 (d2 MRR ~0.75); full mix 0.77071.
-4. Augmented data (server): `train_pairs_aug_geom_contrast_1k.csv` = 850 pairs
-   (350 clean + 500 geom+contrast aug). Confirmed valid + trainable.
-5. Launched Track B: contrastive 3D training on augmented data on ROCm GPU
-   (`contrastive_3d_train.py`, now supports `--train-pair-csv` + subject-aware
-   holdout). Running in container `rocm` at `/app/runs/aug`.
+1. Построил `synthetic_d2_eval.py` + `d2_methods.py`: локальный валидатор синтетического d2.
+   Применяет независимые rigid+elastic-варпы к размеченным парам d1, чтобы имитировать d2,
+   и оценивает методы офлайн (Hungarian-recovery MRR). Откалиброван так, что canonical ≈ 0.26
+   совпадает с реальным d2. **Используйте до того, как тратить submission на Kaggle.**
+2. Обнаружил template normalization (синтетика 0.55 против canonical 0.26). Построил
+   `d2_template_retrieval.py` (кэширует в `.d2cache/`).
+3. Проверено на Kaggle: d2 частично 0.24963 (d2 MRR ~0.75); полный микс 0.77071.
+4. Аугментированные данные (сервер): `train_pairs_aug_geom_contrast_1k.csv` = 850 пар
+   (350 чистых + 500 geom+contrast aug). Подтверждены как валидные + обучаемые.
+5. Запустил Track B: contrastive 3D-обучение на аугментированных данных на ROCm GPU
+   (`contrastive_3d_train.py`, теперь поддерживает `--train-pair-csv` + subject-aware
+   holdout). Выполняется в контейнере `rocm` по пути `/app/runs/aug`.
 
-## Track B (GPU augmented training) — DEAD END
+## Track B (GPU-обучение на аугментации) — ТУПИК
 
-Contrastive 3D dual-encoder trained on the 850 augmented pairs (subject-aware
-split) reached only holdout_mrr ~0.04 / all_gallery ~0.009 by epoch 35 — far
-below the classical 0.90. The scratch deep model does not learn competitive
-embeddings even with geom+contrast augmentation. Killed to free GPU. The
-augmented data could still be used to refit the classical PCA/Ridge map for
-robustness, but the classical pipeline already dominates.
+Contrastive 3D dual-encoder, обученный на 850 аугментированных парах (subject-aware
+split), достиг лишь holdout_mrr ~0.04 / all_gallery ~0.009 к эпохе 35 — намного
+ниже классических 0.90. Глубокая модель с нуля не учит конкурентоспособные
+эмбеддинги даже с geom+contrast-аугментацией. Остановлено, чтобы освободить GPU.
+Аугментированные данные всё ещё можно использовать для дообучения классического
+PCA/Ridge-маппинга ради устойчивости, но классический пайплайн уже доминирует.
 
-## Submit log (0.95 push)
+## Лог отправок (рывок к 0.95)
 
-- 2026-06-27 19:42 — `d2_template_augfit_g44_hungarian.csv` → **0.20931** (d2 MRR ~0.628; REGRESSED vs 0.749).
-- 2026-06-27 19:42 — `mix_hung_d1template_d2augfit_d3grid.csv` → **0.86412** (REGRESSED vs 0.90444).
+- 2026-06-27 19:42 — `d2_template_augfit_g44_hungarian.csv` → **0.20931** (d2 MRR ~0.628; РЕГРЕСС против 0.749).
+- 2026-06-27 19:42 — `mix_hung_d1template_d2augfit_d3grid.csv` → **0.86412** (РЕГРЕСС против 0.90444).
 
-### Summary @ augfit regression
-Synthetic-augmented map refit hurt real d2 (0.749→0.628). The harness predicted
-+0.11 but it did NOT transfer — the map overfit the synthetic deform/contrast
-distribution. SECOND confirmed case (after grid56) that the harness is unreliable
-for changes that depend on the data DISTRIBUTION (map retraining, resolution),
-while it IS reliable for geometry/architecture method ranking (template vs
-canonical vs affine — all transferred correctly). BEST stays 0.90444.
+### Сводка по регрессу augfit
+Дообучение маппинга на синтетической аугментации навредило реальному d2 (0.749→0.628).
+Харнесс предсказал +0.11, но это НЕ перенеслось — маппинг переобучился под синтетическое
+распределение деформаций/контраста. ВТОРОЙ подтверждённый случай (после grid56), когда
+харнесс ненадёжен для изменений, зависящих от РАСПРЕДЕЛЕНИЯ данных (дообучение маппинга,
+разрешение), при том что он НАДЁЖЕН для ранжирования методов по геометрии/архитектуре
+(template против canonical против affine — всё перенеслось корректно). ЛУЧШИЙ остаётся 0.90444.
 
-Revised plan for 0.95: stop retraining the map on synthetic data. Attack the d2
-error TAIL = registration failures (rigid stuck in local minima -> wrong frame).
-Registration robustness (PCA-axis init, more multi-starts, coarse-to-fine) is a
-geometry/optimization fix, the category the harness predicts reliably. Also worth:
-real server geom+contrast aug via --fit-pair-csv (real distribution, may transfer
-unlike synthetic).
+Пересмотренный план для 0.95: прекратить дообучать маппинг на синтетических данных.
+Атаковать ХВОСТ ошибок d2 = сбои регистрации (rigid застревает в локальных минимумах ->
+неверная система координат). Устойчивость регистрации (инициализация по осям PCA, больше
+multi-start, coarse-to-fine) — это геометрический/оптимизационный фикс, категория, которую
+харнесс предсказывает надёжно. Также стоит попробовать: реальную серверную geom+contrast-аугментацию
+через `--fit-pair-csv` (реальное распределение, может перенестись в отличие от синтетики).
 
-## Alpha ternary search — NEGATIVE (alpha is inert)
+## Тернарный поиск по alpha — ОТРИЦАТЕЛЬНЫЙ (alpha инертна)
 
-- 2026-06-27 19:59 — `mix_a190.csv` → 0.90444; `mix_a380.csv` → 0.90444 (= anchor a100).
-- Diffed submissions across alpha in [0, 2000]: only ranking TAILS change; top-1 is
-  NEVER changed in any pool; val (public) rows essentially unchanged until a=2000.
-- CONCLUSION: Ridge alpha does not affect MRR here. Hungarian forces the assigned
-  target to rank 1, so MRR depends only on the permutation, which is stable to alpha.
-  Ternary/grid search over alpha is futile. Lever = d2 assignment accuracy itself.
+- 2026-06-27 19:59 — `mix_a190.csv` → 0.90444; `mix_a380.csv` → 0.90444 (= якорь a100).
+- Сравнил submission по разным alpha в [0, 2000]: меняются только ХВОСТЫ ранжирования; top-1
+  НИКОГДА не меняется ни в одном пуле; val (public) строки по сути не меняются вплоть до a=2000.
+- ВЫВОД: alpha у Ridge не влияет на MRR здесь. Hungarian принудительно ставит назначенный
+  target на ранг 1, поэтому MRR зависит только от перестановки, которая устойчива к alpha.
+  Тернарный/grid-поиск по alpha бесполезен. Рычаг = сама точность назначения d2.
 
-## More 0.95 attempts (all REGRESSED — best stays 0.90444)
+## Ещё попытки достичь 0.95 (все РЕГРЕСС — лучший остаётся 0.90444)
 
-- affine reg (harness 0.39<0.56), deformable (washes subject shape), robust/PCA-init
-  reg (harness 0.53, neutral at 12deg), synth-augfit (real d2 0.749->0.628),
-  rich multi-channel feature (harness +0.05 BUT real mix 0.88978 < 0.90444).
-- HARDENED LESSON: the synthetic harness only predicts LARGE architectural wins
-  (template vs canonical, ~2x — transferred). Small harness gains (+0.05) are
-  synthetic-distribution overfit and do NOT transfer to real d2. Stop trusting
-  incremental harness deltas; only submit qualitatively different methods.
-- Remaining classical hope: server real geom+contrast augmented map refit (running,
-  fit-feature ~500/850). If it fails, 0.95 likely needs a pretrained 3D medical
-  encoder fine-tuned on the 850 aug pairs (large effort, GPU), since the classical
-  template+pca_ridge d2 appears near its ~0.75 ceiling.
+- affine reg (харнесс 0.39<0.56), deformable (размывает форму субъекта), robust/PCA-init
+  reg (харнесс 0.53, нейтрально на 12 градусах), synth-augfit (реальный d2 0.749->0.628),
+  богатый многоканальный feature (харнесс +0.05, НО реальный микс 0.88978 < 0.90444).
+- ЗАКРЕПЛЁННЫЙ УРОК: синтетический харнесс предсказывает только КРУПНЫЕ архитектурные выигрыши
+  (template против canonical, ~2x — перенеслось). Малые приросты на харнессе (+0.05) — это
+  переобучение под синтетическое распределение и НЕ переносятся на реальный d2. Прекратить
+  доверять инкрементальным дельтам харнесса; отправлять только качественно иные методы.
+- Оставшаяся классическая надежда: серверное дообучение маппинга на реальной geom+contrast-аугментации
+  (выполняется, fit-feature ~500/850). Если не сработает, для 0.95 скорее всего нужен предобученный
+  3D-медицинский энкодер, дообученный на 850 aug-парах (большой объём работы, GPU), поскольку
+  классический template+pca_ridge d2 выглядит близким к своему потолку ~0.75.
 
-## Real-aug refit — REGRESSED (best stays 0.90444)
+## Дообучение на реальной аугментации — РЕГРЕСС (лучший остаётся 0.90444)
 
 - 2026-06-27 20:44 — `d2_template_realaug_g44_hungarian.csv` → 0.18672 (d2 MRR ~0.56).
 - 2026-06-27 20:44 — `mix_hung_d1template_d2realaug_d3grid.csv` → 0.84153.
-- Both SYNTHETIC and REAL geom+contrast augmentation refit HURT d2 (0.749 -> 0.628 /
-  0.56). Augmenting the cross-modal map degrades it — the aug distribution does not
-  match real d2's transforms. Augmentation is a dead end for the classical map.
+- И СИНТЕТИЧЕСКОЕ, и РЕАЛЬНОЕ дообучение на geom+contrast-аугментации НАВРЕДИЛО d2 (0.749 -> 0.628 /
+  0.56). Аугментация кросс-модального маппинга деградирует его — распределение аугментаций не
+  совпадает с реальными трансформациями d2. Аугментация — тупик для классического маппинга.
 
-## Status of the 0.95 push (honest)
+## Состояние рывка к 0.95 (честно)
 
-Classical levers exhausted; d2 sits at its ~0.749 ceiling for template+pca_ridge.
-Tried and FAILED/neutral: alpha (inert), grid56, affine, deformable, robust/PCA-init
-reg, rich features, synth-augfit, real-augfit. Best verified = 0.90444. Reaching
-0.95 needs d2 ~0.886 (+0.14 on the hardest dataset) and likely a higher-ceiling
-model (pretrained 3D medical encoder fine-tuned on the 850 aug pairs) — scratch
-contrastive already failed (0.04), so this is uncertain and large effort.
+Классические рычаги исчерпаны; d2 сидит на своём потолке ~0.749 для template+pca_ridge.
+Пробовали и ПРОВАЛИЛИ/нейтрально: alpha (инертна), grid56, affine, deformable, robust/PCA-init
+reg, богатые признаки, synth-augfit, real-augfit. Лучший проверенный = 0.90444. Для достижения
+0.95 нужен d2 ~0.886 (+0.14 на самом сложном датасете) и, вероятно, модель с более высоким
+потолком (предобученный 3D-медицинский энкодер, дообученный на 850 aug-парах) — contrastive
+с нуля уже провалился (0.04), так что это неопределённо и трудозатратно.
 
-## Research findings (Firecrawl, 4 subagents) — methods to try for d2
+## Результаты исследований (Firecrawl, 4 субагента) — методы для d2
 
-Theory: fine-tuning distorts pretrained features under distribution shift (arXiv
-2202.10054) -> explains our fine-tune/refit regressions; stay frozen/no-training.
+Теория: дообучение искажает признаки предобученной модели при сдвиге распределения (arXiv
+2202.10054) -> объясняет наши регрессы при fine-tune/refit; оставаться frozen/без обучения.
 
-Ranked (ROI x feasibility for 350 pairs, CPU + ROCm GPU):
-1. MIND / MIND-SSC self-similarity descriptor as the feature front-end (CPU, no
-   training; modality-independent + locally warp-tolerant). Implemented as
-   `m_template_mind` / `mind_descriptor` in d2_methods.py. TESTING ON HARNESS.
-2. SynthMorph/EasyReg or BrainMorph (pretrained, contrast-agnostic registration):
-   use POST-REGISTRATION RESIDUAL as the d2 cost matrix -> Hungarian. Highest d2
-   ceiling. GPU, top-K rerank. Caveat: residual not registration-success (inter-
-   subject reg also works). Repos: alanqrwang/brainmorph, mattiaspaul/deedsBCV,
-   FreeSurfer EasyReg/SynthMorph.
-3. SynthSeg region-volume / label-map matching (pretrained, contrast-invariant,
-   warp-robust region volumes). github.com/BBillot/SynthSeg.
-4. Raptor train-free 3D embedding (sriramlab/raptor); BrainIAC FROZEN + Procrustes
-   head (not fine-tune).
-AVOID: GAN/diffusion synthesis (data too small), scratch contrastive (failed 0.04),
-fine-tuning (distorts), disease foundation models.
+Ранжировано (ROI x осуществимость для 350 пар, CPU + ROCm GPU):
+1. Дескриптор self-similarity MIND / MIND-SSC как front-end признаков (CPU, без
+   обучения; не зависит от модальности + локально устойчив к варпам). Реализовано как
+   `m_template_mind` / `mind_descriptor` в d2_methods.py. ТЕСТИРУЕТСЯ НА ХАРНЕССЕ.
+2. SynthMorph/EasyReg или BrainMorph (предобученная, контраст-агностичная регистрация):
+   использовать ПОСТ-РЕГИСТРАЦИОННЫЙ ОСТАТОК (residual) как матрицу стоимости d2 -> Hungarian.
+   Самый высокий потолок d2. GPU, rerank по top-K. Оговорка: остаток — это не успех регистрации
+   (межсубъектная регистрация тоже работает). Репозитории: alanqrwang/brainmorph,
+   mattiaspaul/deedsBCV, FreeSurfer EasyReg/SynthMorph.
+3. Сопоставление по объёмам регионов / label-map SynthSeg (предобученное, инвариантное к
+   контрасту, устойчивые к варпам объёмы регионов). github.com/BBillot/SynthSeg.
+4. Raptor — train-free 3D-эмбеддинг (sriramlab/raptor); BrainIAC FROZEN + Procrustes-голова
+   (не дообучение).
+ИЗБЕГАТЬ: GAN/diffusion-синтез (данных слишком мало), contrastive с нуля (провал 0.04),
+дообучение (искажает), foundation-модели для болезней.
 
-## Push toward 0.95 (goal)
+## Рывок к 0.95 (цель)
 
-Need MRR sum 2.85 (currently 2.713). d3~1.0 maxed, d1~0.964 near ceiling, so d2
-(~0.749) must reach ~0.886. Harness findings:
-- affine registration: 0.387 < rigid 0.558 — HURTS (extra DOF warp away subject
-  shape; rigid is the sweet spot, deformable would be worse).
-- **augmented map refit (geom+contrast): 0.669 vs 0.558 (+0.11)** — refitting
-  PCA/Ridge on augmented pairs helps. Generating real-d2 version now
-  (`--synth-aug-k 2`). Also have `--fit-pair-csv` for the server's real 850 aug pairs.
-- Next if needed: registration robustness (more multi-starts / PCA-axis init) for
-  the mis-assigned tail; more aug copies; real server augmentation.
+Нужна сумма MRR 2.85 (сейчас 2.713). d3~1.0 максимизирован, d1~0.964 близко к потолку,
+поэтому d2 (~0.749) должен достичь ~0.886. Находки харнесса:
+- affine-регистрация: 0.387 < rigid 0.558 — ВРЕДИТ (лишние степени свободы уводят форму
+  субъекта; rigid — золотая середина, deformable был бы хуже).
+- **дообучение маппинга на аугментации (geom+contrast): 0.669 против 0.558 (+0.11)** — дообучение
+  PCA/Ridge на аугментированных парах помогает. Сейчас генерируется реальная d2-версия
+  (`--synth-aug-k 2`). Также есть `--fit-pair-csv` для серверных реальных 850 aug-пар.
+- Далее при необходимости: устойчивость регистрации (больше multi-start / PCA-axis init) для
+  неверно назначенного хвоста; больше копий аугментации; реальная серверная аугментация.
 
-## BrainIAC fine-tune (deep, in progress)
+## Дообучение BrainIAC (глубокое, в процессе)
 
-The augmentation's correct consumer. `brainiac_finetune.py` fine-tunes the
-pretrained BrainIAC ViT (MONAI, 96^3, /app/BrainIAC.ckpt) + a projection head with
-symmetric InfoNCE to align T1/T2, trained on the stronger augmented manifest
-(`train_pairs_aug_geom_contrast_1k_plus_stronger.csv`, 2100 pairs = 350 clean +
-1750 aug, 5 variants/subject). 1788 train / 312 holdout (subject-aware). Running
-on the ROCm GPU; monitoring holdout all-gallery MRR vs the scratch failure (0.04)
-and frozen-cosine (0.15). On completion it auto-embeds all pools + Hungarian +
-writes /app/submissions/brainiac_finetune_submission.csv. Then pull, mix, submit.
-This is the remaining higher-ceiling shot at 0.95; uncertain.
+Правильный потребитель аугментации. `brainiac_finetune.py` дообучает предобученный
+BrainIAC ViT (MONAI, 96^3, /app/BrainIAC.ckpt) + проекционную голову с симметричным
+InfoNCE для выравнивания T1/T2, обучаясь на более сильном аугментированном манифесте
+(`train_pairs_aug_geom_contrast_1k_plus_stronger.csv`, 2100 пар = 350 чистых +
+1750 aug, 5 вариантов/субъект). 1788 train / 312 holdout (subject-aware). Выполняется
+на ROCm GPU; мониторим holdout all-gallery MRR против провала с нуля (0.04) и
+frozen-cosine (0.15). По завершении автоматически эмбеддит все пулы + Hungarian +
+пишет /app/submissions/brainiac_finetune_submission.csv. Затем выгрузить, смешать, отправить.
+Это оставшийся шанс с более высоким потолком на 0.95; неопределённый.
 
-## Submit log (cont.)
-- 2026-06-28 06:14 — `siftrank_d2.csv` → **0.14523** (d2 MRR ~0.436; SIFT-Rank fails cross-modal+warp).
-- 2026-06-28 06:14 — `mix_hung_d1template_d2sift_d3grid.csv` → **0.80004** (regressed).
-- 2026-06-28 05:42 — `mix_hung_d1d2sliceview_d3grid.csv` → **0.81042** (regressed; slice-pooling = global descriptor, same wall).
-- 2026-06-28 05:36 — `d2_deeds_rerank.csv` → **0.25061** (d2 MRR ~0.752; ties template 0.749).
-- 2026-06-28 05:36 — `mix_hung_d1template_d2deeds_d3grid.csv` → **0.90541** (NEW BEST, +0.001).
-  deeds registration-residual discriminated 6/6 on registered d1 but only TIES template
-  on d2's independent-elastic warp — the residual margin collapses there. Marginal win.
-  d2 ceiling ~0.75 confirmed across template / registration / augmentation / deep.
-- 2026-06-27 23:15 — `mix_hung_d1d2strongaug_d3grid.csv` (2100-pair aug map refit) → **0.80590**.
-  Worse than 1k-aug (0.842) and best (0.904). Augmentation-refit hurts the linear map
-  MONOTONICALLY (more aug = worse). Definitive dead end. Best stays 0.90444.
+## Лог отправок (продолжение)
+- 2026-06-28 06:14 — `siftrank_d2.csv` → **0.14523** (d2 MRR ~0.436; SIFT-Rank не справляется с кросс-модальностью+варпом).
+- 2026-06-28 06:14 — `mix_hung_d1template_d2sift_d3grid.csv` → **0.80004** (регресс).
+- 2026-06-28 05:42 — `mix_hung_d1d2sliceview_d3grid.csv` → **0.81042** (регресс; slice-pooling = глобальный дескриптор, та же стена).
+- 2026-06-28 05:36 — `d2_deeds_rerank.csv` → **0.25061** (d2 MRR ~0.752; на уровне template 0.749).
+- 2026-06-28 05:36 — `mix_hung_d1template_d2deeds_d3grid.csv` → **0.90541** (НОВЫЙ ЛУЧШИЙ, +0.001).
+  Registration-residual от deeds различил 6/6 на зарегистрированном d1, но лишь СРАВНЯЛСЯ с template
+  на независимом elastic-варпе d2 — там запас по остатку схлопывается. Маргинальный выигрыш.
+  Потолок d2 ~0.75 подтверждён по template / регистрации / аугментации / глубокому обучению.
+- 2026-06-27 23:15 — `mix_hung_d1d2strongaug_d3grid.csv` (дообучение маппинга на 2100-парной aug) → **0.80590**.
+  Хуже 1k-aug (0.842) и лучшего (0.904). Дообучение на аугментации вредит линейному маппингу
+  МОНОТОННО (больше aug = хуже). Окончательный тупик. Лучший остаётся 0.90444.
 
-## deeds registration-residual — VALIDATED on real data, building d2 reranker
+## Registration-residual от deeds — ВАЛИДИРОВАН на реальных данных, строится reranker d2
 
-deedsBCV (MIND-SSC deformable registration, built locally `make SLOW=1`) post-reg
-MIND residual discriminates same-subject cross-modal: 6/6 real d1 pairs had the
-true T2 as the minimum residual (diag ~0.10 vs off-diag ~0.13-0.16). This is the
-research-backed high-ceiling lever for d2. `deeds_d2_rerank.py`: template top-K
-prefilter -> deeds-residual rerank -> Hungarian. Running locally (~2h, top-K=6,
-96^3, ~8s/pair). On finish: merge into best mix, submit directly.
+Пост-регистрационный MIND-остаток deedsBCV (деформируемая регистрация MIND-SSC, собрана
+локально `make SLOW=1`) различает один и тот же субъект кросс-модально: у 6/6 реальных пар d1
+истинный T2 имел минимальный остаток (диагональ ~0.10 против внедиагональных ~0.13-0.16). Это
+исследовательски обоснованный рычаг с высоким потолком для d2. `deeds_d2_rerank.py`: префильтр
+top-K по template -> rerank по остатку deeds -> Hungarian. Выполняется локально (~2ч, top-K=6,
+96^3, ~8с/пара). По завершении: вмержить в лучший микс, отправить напрямую.
 
-Also running: strong-aug map refit on server (2100-pair manifest), per user
-request to fit current best on server data and submit directly (no synthetic gate).
+Также выполняется: дообучение маппинга на сильной аугментации на сервере (2100-парный манифест),
+по запросу пользователя дообучить текущий лучший на серверных данных и отправить напрямую
+(без синтетического гейта).
 
-## In flight
+## В полёте
 
-- **Track A2**: template normalization on dataset1 + dataset3
-  (`d2_template_retrieval.py --datasets dataset1 dataset3`). Tests whether the
-  template trick also helps d3 (new bottleneck). Output:
+- **Track A2**: template normalization на dataset1 + dataset3
+  (`d2_template_retrieval.py --datasets dataset1 dataset3`). Проверяет, помогает ли
+  трюк с шаблоном также для d3 (новое узкое место). Вывод:
   `submissions/d1d3_template_g44_hungarian.csv`.
-- **Track B**: GPU contrastive training on 850 augmented pairs. Watching
-  `holdout_mrr` / `all_gallery_mrr` vs the old failed run (~0.12).
+- **Track B**: GPU contrastive-обучение на 850 аугментированных парах. Следим за
+  `holdout_mrr` / `all_gallery_mrr` против старого провального запуска (~0.12).
 
-## Next steps (priority order)
+## Следующие шаги (по приоритету)
 
-1. **dataset3** (biggest remaining lever): test template normalization; if no
-   gain, try registration/robust-to-missing-tissue features (surgery removes
-   anatomy). d3 0.69 -> target 0.8.
-2. **Squeeze dataset2**: tune template grid (44->56/64), PCA components/alpha,
-   add affine (not just rigid) registration, multi-start refinement.
-3. **Track B**: if augmented contrastive beats classical on the synthetic/holdout
-   proxy, blend or replace; else keep classical.
-4. Re-assemble best all-template mix, validate, submit.
+1. **dataset3** (крупнейший оставшийся рычаг): протестировать template normalization; если нет
+   выигрыша, попробовать регистрацию/устойчивые к отсутствию ткани признаки (операция удаляет
+   анатомию). d3 0.69 -> цель 0.8.
+2. **Выжать dataset2**: подобрать сетку шаблона (44->56/64), компоненты PCA/alpha,
+   добавить affine (не только rigid) регистрацию, multi-start refinement.
+3. **Track B**: если аугментированный contrastive обходит классику на синтетическом/holdout
+   прокси, смешать или заменить; иначе оставить классику.
+4. Пересобрать лучший all-template микс, провалидировать, отправить.
 
-## Verified Kaggle scores (this session)
+## Проверенные счёты на Kaggle (эта сессия)
 
 ```
-mix_hung_d1pca_d2template_d3pca.csv     0.77071   NEW BEST
-mix_hung_d1pca_d2canon20_flipaug_d3pca  0.65137   prev best
+mix_hung_d1pca_d2template_d3pca.csv     0.77071   НОВЫЙ ЛУЧШИЙ
+mix_hung_d1pca_d2canon20_flipaug_d3pca  0.65137   прежний лучший
 d2_template_g44_hungarian.csv (partial) 0.24963   d2 MRR ~0.749
 d2_canonical_pca20_c128_flipaug (part)  0.13029   d2 MRR ~0.391
 ```
 
-## Commands
+## Команды
 
-Run template d2:
+Запуск template d2:
 ```bash
 .venv/bin/python d2_template_retrieval.py --datasets dataset2 --grid 44 --assignment \
   --out submissions/d2_template_g44_hungarian.csv
 ```
 
-Local synthetic-d2 validation (no Kaggle needed):
+Локальная валидация синтетического d2 (Kaggle не нужен):
 ```bash
 .venv/bin/python synthetic_d2_eval.py --n-eval 60 --n-train 200 --grid 44 \
   --max-rot-deg 12 --max-shift 6 --elastic-sigma 8 --elastic-alpha 3 \
   --methods canonical template
 ```
 
-Validate + submit:
+Валидация + отправка:
 ```bash
 .venv/bin/python classical_retrieval.py validate submissions/<file>.csv
 kaggle competitions submit -c ehl-paris-medical-image-retrieval -f submissions/<file>.csv -m "<msg>"
 ```
 
-## Submit log
+## Лог отправок
 
 - 2026-06-27 19:00 — `d2_template_g44_hungarian.csv` → **0.24963** (d2 MRR ~0.75).
-- 2026-06-27 19:00 — `mix_hung_d1pca_d2template_d3pca.csv` → **0.77071** (best at the time).
-- 2026-06-27 19:05 — `d1_template_g44_hungarian.csv` → **0.32147** (d1 MRR ~0.964; template helps d1).
-- 2026-06-27 19:05 — `d3_template_g44_hungarian.csv` → **0.08368** (d3 MRR ~0.251; template HURTS d3).
-- 2026-06-27 19:06 — `mix_hung_d1template_d2template_d3pca.csv` → **0.80127** (NEW BEST).
+- 2026-06-27 19:00 — `mix_hung_d1pca_d2template_d3pca.csv` → **0.77071** (лучший на тот момент).
+- 2026-06-27 19:05 — `d1_template_g44_hungarian.csv` → **0.32147** (d1 MRR ~0.964; template помогает d1).
+- 2026-06-27 19:05 — `d3_template_g44_hungarian.csv` → **0.08368** (d3 MRR ~0.251; template ВРЕДИТ d3).
+- 2026-06-27 19:06 — `mix_hung_d1template_d2template_d3pca.csv` → **0.80127** (НОВЫЙ ЛУЧШИЙ).
 
-### Summary @ 0.80127
-Swapped d1 from pca_ridge to template normalization (d1 MRR 0.877→0.964) on top of
-the d2 template win. d3 kept on pca_ridge because template breaks it.
+### Сводка @ 0.80127
+Сменил d1 с pca_ridge на template normalization (d1 MRR 0.877→0.964) поверх
+выигрыша template для d2. d3 оставлен на pca_ridge, потому что template его ломает.
 
-- 2026-06-27 19:11 — `d3_gridfeat_g44_hungarian.csv` → **0.33333** (d3 MRR ~1.0; grid feature, no register).
-- 2026-06-27 19:12 — `mix_hung_d1template_d2template_d3grid.csv` → **0.90444** (NEW BEST, GOAL HIT).
+- 2026-06-27 19:11 — `d3_gridfeat_g44_hungarian.csv` → **0.33333** (d3 MRR ~1.0; grid feature, без регистрации).
+- 2026-06-27 19:12 — `mix_hung_d1template_d2template_d3grid.csv` → **0.90444** (НОВЫЙ ЛУЧШИЙ, ЦЕЛЬ ДОСТИГНУТА).
 
-- 2026-06-27 19:16 — `mix_hung_d1d2template_g56_d3grid.csv` → **0.85000** (REGRESSED; grid56 d1+d2 hurt real data).
+- 2026-06-27 19:16 — `mix_hung_d1d2template_g56_d3grid.csv` → **0.85000** (РЕГРЕСС; grid56 d1+d2 навредил реальным данным).
 
-- 2026-06-27 19:18 — `mix_hung_d1g44_d2g56_d3grid.csv` → **0.86609** (d2-only g56 also regressed).
+- 2026-06-27 19:18 — `mix_hung_d1g44_d2g56_d3grid.csv` → **0.86609** (только d2 g56 тоже регресс).
 
-### Summary @ 0.85000 / 0.86609 (grid56 dead end — BEST stays 0.90444)
-grid56 hurts BOTH d1 and d2 on real data (full g56=0.850, d2-only g56=0.866, vs
-g44 best 0.90444). The synthetic-d2 harness favored grid56 (+0.16) but it did NOT
-transfer. LESSON: the synthetic harness is reliable for RELATIVE METHOD ranking
-within d2-style distortion (it correctly picked template >> canonical), but NOT
-for resolution/grid choices on real data — likely g56 overfits PCA with only 350
-train pairs. grid44 is optimal. Locking 0.90444.
+### Сводка @ 0.85000 / 0.86609 (grid56 — тупик, ЛУЧШИЙ остаётся 0.90444)
+grid56 вредит И d1, И d2 на реальных данных (полный g56=0.850, только d2 g56=0.866, против
+g44 best 0.90444). Синтетический d2-харнесс предпочитал grid56 (+0.16), но это НЕ перенеслось.
+УРОК: синтетический харнесс надёжен для ОТНОСИТЕЛЬНОГО ранжирования методов в рамках искажения
+d2-типа (он корректно выбрал template >> canonical), но НЕ для выбора разрешения/сетки на
+реальных данных — вероятно, g56 переобучает PCA всего на 350 train-парах. grid44 оптимален.
+Фиксируем 0.90444.
 
-Open d2 levers (need real validation, synthetic unreliable for absolutes; goal
-already met so these are bonus): affine (vs rigid) registration; refit PCA/Ridge
-on the 850 augmented pairs for robustness; alpha/components tuning; multi-start
-registration refinement.
+Открытые рычаги d2 (нужна реальная валидация, синтетика ненадёжна для абсолютов; цель уже
+достигнута, так что это бонус): affine (против rigid) регистрация; дообучение PCA/Ridge на
+850 аугментированных парах ради устойчивости; настройка alpha/компонент; multi-start
+refinement регистрации.
 
-### Summary @ 0.90444
-d3 was solved by using the grid-intensity feature WITHOUT registration (d3 is
-already aligned, so registration was the only thing holding it back; pca_ridge on
-old classical features capped it at 0.69, grid feature → ~1.0). Combined with d1+d2
-template normalization → overall 0.904.
+### Сводка @ 0.90444
+d3 был решён за счёт использования grid-intensity feature БЕЗ регистрации (d3 уже выровнен,
+поэтому регистрация была единственным, что его сдерживало; pca_ridge на старых классических
+признаках упирался в 0.69, grid feature → ~1.0). В сочетании с template normalization для d1+d2
+→ итого 0.904.
 
-Now d2 (~0.749) is the lone weak point. Synthetic-d2 harness shows template at
-grid56 = 0.719 vs grid44 = 0.558 (+0.16) — regenerating d1+d2 at grid56 in flight
-(`d1d2_template_g56_hungarian.csv`), expected to push d2 real MRR up materially.
+Теперь d2 (~0.749) — единственная слабая точка. Синтетический d2-харнесс показывает template на
+grid56 = 0.719 против grid44 = 0.558 (+0.16) — в полёте перегенерация d1+d2 на grid56
+(`d1d2_template_g56_hungarian.csv`), ожидается, что это заметно поднимет реальный MRR d2.
 
-Next steps:
-1. Fold in grid56 d1+d2 (validated locally), re-submit. Maybe try grid64.
-2. Augmentation (Track B GPU) not yet contributing; could also robustify the
-   classical PCA/Ridge map by fitting on the 850 augmented pairs.
-3. d2 affine (vs rigid) registration; multi-start refinement.
+Следующие шаги:
+1. Вложить grid56 d1+d2 (провалидировано локально), переотправить. Возможно, попробовать grid64.
+2. Аугментация (Track B GPU) пока не вносит вклад; также могла бы повысить устойчивость
+   классического PCA/Ridge-маппинга за счёт обучения на 850 аугментированных парах.
+3. d2 affine (против rigid) регистрация; multi-start refinement.
