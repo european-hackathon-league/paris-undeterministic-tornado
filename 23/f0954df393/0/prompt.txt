@@ -1,0 +1,231 @@
+can you explain it in more details? 3 Preprocessing: intensity normalization
+Each volume V is loaded and reduced to a normalized intensity field on a fixed G × G × G grid (we
+use G = 44).
+1. Load NIfTI; if 4D keep the first channel; replace NaN/Inf with 0.
+2. Foreground mask M = {|V | > 10−6}.
+3. Robust window: lo, hi = the 1st and 99th percentiles of V over M.
+4. Clip-and-scale: V ← clip
+(V − lo)/(hi − lo), 0, 1
+
+, and set background (¬M) to 0.
+5. Resample V onto the G3 grid by trilinear interpolation (scipy.ndimage.map coordinates,
+order 1).
+This makes intensities comparable across scans of differing dynamic range, and the fixed grid
+makes every volume a vector of the same length G3
+.
+
+---
+
+ok 44 is a bit weird number, can we change it?
+
+---
+
+reread README.md . our current model performs excellent on d1 and d3, but poorly on d2, can we change G to improve performance on d2?
+
+---
+
+we use @augmentation.pdf to augment some data, but it has some arbitrary parameters. i wanna propose a new way: since we have a kinda good model, can we use its' matching of dataset2 as ground truth, estimate the parameters of transformations from this matching and then augment the data with the same distribution
+
+---
+
+you can read augmentation.tex now
+
+---
+
+the current best model is on github in research-something branch. Can you please implement this plan? the dataset is on the server ip:
+134.199.198.104
+
+jupyter_url:
+http://134.199.198.104/lab?REDACTED
+
+jupyter_token:
+REDACTED
+root_password:
+Drake2550. do not do any git commands on the server. Create a separate folder "maxim-augmentation" as a result. Please ask if you have any questions, do not guess
+
+---
+
+1. root 2. https://github.com/ValikProgrammer/ehl-paris-2026-medical-retrieval/tree/research/template-normalization 3. in the root
+
+---
+
+why do you go to the shared-docker folder? can you just stay in the folder you appear in after writing root@ip
+
+---
+
+please use ssh and not jupyter api
+
+---
+
+just use password bro. it is Drake2550
+
+---
+
+ok retry
+
+---
+
+ignore the shared-docker!!!! there's no such folder
+
+---
+
+but other people somehow ran everything fine
+
+---
+
+ok what to do next? the code was executed
+
+---
+
+ok i ran with min-margin 0.01. please provide a command i should run to try train something and compare the results
+
+---
+
+ok let's test the best classical model. but don't change the model, copy any files you need to the same folder and modify them there
+
+---
+
+wait what brainiac? the best model doesn't use brainiac
+
+---
+
+ok sure go on
+
+---
+
+Traceback (most recent call last):
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 251, in <module>
+    main()
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 230, in main
+    model = build_model(args.data_root, args.train_pair_csv, args.grid, args.components, args.alpha)
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 152, in build_model
+    train_q = np.stack([load_grid(data_root, row["query_image"], grid) for row in pairs])
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 152, in <listcomp>
+    train_q = np.stack([load_grid(data_root, row["query_image"], grid) for row in pairs])
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 73, in load_grid
+    return downsample(load_normalized(resolve_image_path(data_root, image_path)), grid)
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 42, in resolve_image_path
+    raise FileNotFoundError(path)
+FileNotFoundError: /root/.cache/kagglehub/competitions/ehl-paris-medical-image-retrieval/output/images/q_0fb1a0d90299_pcal00.nii.gz
+
+---
+
+File "/root/maxim-augmentation/classical_template_aug_test.py", line 253, in <module>
+    main()
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 237, in main
+    score_pool(
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 183, in score_pool
+    feat = flat_feature(register_to_template(vol, t1_template, opt_size) if register else vol)
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 138, in register_to_template
+    res = minimize(
+  File "/root/miniforge3/envs/brainiac/lib/python3.9/site-packages/scipy/optimize/_minimize.py", line 687, in minimize
+    res = _minimize_powell(fun, x0, args, callback, bounds, **options)
+  File "/root/miniforge3/envs/brainiac/lib/python3.9/site-packages/scipy/optimize/_optimize.py", line 3335, in _minimize_powell
+    fval = squeeze(func(x))
+  File "/root/miniforge3/envs/brainiac/lib/python3.9/site-packages/scipy/optimize/_optimize.py", line 569, in function_wrapper
+    fx = function(np.copy(x), *(wrapper_args + args))
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 127, in neg
+    return -ncc(zt, apply_rigid(zv, params))
+  File "/root/maxim-augmentation/classical_template_aug_test.py", line 107, in apply_rigid
+    offset = center - rot @ center + shift
+ValueError: operands could not be broadcast together with shapes (3,) (2,)
+
+---
+
+okay submit using kaggle cli kaggle competitions submit -c ehl-paris-medical-image-retrieval -f submission.csv  -m "Message"
+
+---
+
+no, copy the submission from the server to my laptop and submit from my laptop. you may need to install kaggle cli
+
+---
+
+no the server doesnt have any json settings. if you need my credentials ask
+
+---
+
+KGAT_60c29cdab7790258b25147a8639bafec
+
+---
+
+username is maksimshevkoplias
+
+---
+
+ok the result is 0.2 which is worse. any ideas how to improve?
+
+---
+
+okayplease change the code on the server
+
+---
+
+ok submit again
+
+---
+
+no, it's worse now(
+
+---
+
+sure update the code
+
+---
+
+submit pls
+
+---
+
+0.20438. we need to improve somehow. i think the biggest weakness is that we don't have a testing tool
+
+---
+
+sure do it
+
+---
+
+implement
+
+---
+
+can you write a script which compares variants and output their scores?
+
+---
+
+ok now submit the best one to kaggle as usual
+
+---
+
+what are you doing?
+
+---
+
+can you please spend one submission. i asked you to submit and you started doing somme random staff
+
+---
+
+okay didn't work. any more ideas on how can we improve?
+
+---
+
+okay implement this. 3 team have a score of 1 already
+
+---
+
+ok submit
+
+---
+
+oh, now 0.23878. better. keep improving
+
+---
+
+0.23095 :( we need to improve score more, to like 0.3
+
+---
+
+please implement
+
+---
+
+submit the first one

@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "23f0954df393",
+  "strategy": "manual-commit",
+  "branch": "maxim-sidequests",
+  "checkpoints_count": 38,
+  "files_touched": [
+    "maxim-augmentation/README.md",
+    "maxim-augmentation/classical_template_aug_test.py",
+    "maxim-augmentation/compare_calibrated_variants.py",
+    "maxim-augmentation/evaluate_against_pseudo.py",
+    "maxim-augmentation/evaluate_calibrated_synthetic.py",
+    "maxim-augmentation/fused_d2_retrieval.py",
+    "maxim-augmentation/pseudo_calibrated_augmentation.py"
+  ],
+  "sessions": [
+    {
+      "metadata": "/23/f0954df393/0/metadata.json",
+      "transcript": "/23/f0954df393/0/full.jsonl",
+      "content_hash": "/23/f0954df393/0/content_hash.txt",
+      "prompt": "/23/f0954df393/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1235876,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 25175424,
+    "output_tokens": 75763,
+    "api_call_count": 199
+  }
+}
